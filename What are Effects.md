@@ -1,5 +1,3 @@
-# What are Effects?
-
 Imagine there's a circle surrounding you, representing a boundary (don't worry about the size; you have permission to resize your imaginary boundary as needed). Inside this boundary are things that you have control over in your life; things that are completely reliable and predictable, as much as that is possible. For example, you know how your toaster works, and its idiosyncrasies. Your stove, dishwasher, washing machine, shower---all these are under your control, and you can expect consistent and predictable results when you use them. You could stay in your house just using these devices, getting groceries delivered and never leaving. You would always know how things work and nothing would change. 
 
 This becomes boring. We get stimulus and grow by connecting with the outside world, where things are unpredictable. The world outside the circle.
@@ -13,20 +11,20 @@ Consider a more complex example. You are running a small storage company and you
 
 One kind of unpredictability that we *have* started to pay attention to is errors. As you cannot predict when an error will occur, these are a type of effect. Errors are very clear: if some aspect of a function call fails, it will report that failure as an error.
 
-Exceptions are a problem here. Exceptions exist in a world outside normal function control flow. When an exception is thrown, you can choose to catch it and handle it ... or ignore it, at which point it becomes a runtime error. What we want is for the compiler to ensure that we have properly dealt with all errors, at compile time. 
+Exceptions are a problem here. Exceptions exist in a world outside normal function control flow. When an exception is thrown, you can choose to catch it and handle it ... or ignore it, at which point it becomes a runtime error. What we want is for the type system to ensure that we have properly dealt with all errors, *before* the program runs. 
 
-The further away you get from the site of a thrown exception, the less context information you have. We'd like the compiler to require full error coverage at the site of each function call, rather than anywhere on the exception stack. You still have the *option* of passing the error on, but the compiler requires that choice to be made at the function call site.
+The further away you get from the site of a thrown exception, the less context information you have. We'd like the type system to require full error coverage at the site of each function call, rather than anywhere on the exception stack. You still have the *option* of passing the error on, but the type system requires that choice to be made at the function call site.
 
 The problem happens because we traditionally think of functions like this:
 
 1. You pass any number of arguments to the function.
 2. The function returns a single result.
 
-We have always thought of the result as a single value: the answer you desire. In reality, you might not get that answer because there's a failure, or the answer might not exist. To solve the problem, we *expand the result* to include not just the desired answer but also the failure information. Instead of returning a single value of the type of the desired answer, we return a structure containing the answer *plus* error information.
+We have always thought of the result as a single value: the answer you desire. In reality, you might not get that answer because there's a failure, or the answer might not exist. To report errors without using exceptions, we *expand the result* to include not just the desired answer but also the failure information. Instead of returning a single value of the type of the desired answer, we return a structure containing the answer *plus* error information.
 
 Now when you call such a function, you can't just grab the answer and go on your merry way. You are forced to unpack the returned structure, first looking for error information and dealing with that. Only if there is no error information do you take the answer and continue.
 
-The result is typed, and that type information means that the compiler is able to track your code, and enforce that you have handled all possible error conditions. The only way for errors to slip through the cracks is if you explicitly push them into those cracks. You must write the code that does that, and now that code is visible as a decision you've consciously made (ignoring an exception requires no code at all, so no one can see that you've done it).
+The result is typed, and that type information means that the type system is able to track your code, and enforce that you have handled all possible error conditions. The only way for errors to slip through the cracks is if you explicitly push them into those cracks. You must write the code that does that, and now that code is visible as a decision you've consciously made (ignoring an exception requires no code at all, so no one can see that you've done it).
 
 By treating errors as effects, your programming system is able to guarantee that you mitigate all those effects, thus producing a more reliable program.
 ## Pure Functions & Referential Transparency
@@ -54,3 +52,7 @@ Numbers 1 and 2 are mixed together: if a transaction takes too long, how do you 
 If you make a call to a database, the result is unpredictable (which means the function you are writing is impure because it that calls the database). There are a number of effects that must be mitigated. Mitigating these effects will not make your function pure, but it can reduce the number of effects that "leak out" into anything that calls your function.
 
 Effects are a kind of bookkeeping system that allow you to keep track of and mitigate the unpredict abilities in your program. An *effect system* provides tools to automate tracking and mitigation, but even if you are not using an effect system it can be useful to think in terms of effects.
+## Expressing Effects in Code
+
+Effects system [do exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. However, we can do some basic exploration without them.
+
