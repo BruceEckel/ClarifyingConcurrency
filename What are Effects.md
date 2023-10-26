@@ -29,7 +29,9 @@ The result is typed, and that type information means that the type system is abl
 By treating errors as effects, your programming system is able to guarantee that you mitigate all those effects, thus producing a more reliable program.
 ## Pure Functions & Referential Transparency
 
-What if a function is inside your "circle of certainty," and has no effects? It produces the same result for the same arguments, every time, with no surprises. We call this a *pure function*, and it has special characteristics:
+What if a function is inside your "circle of certainty," and has no effects? It produces the same result for the same arguments, every time, with no surprises. We call this a *pure function*, and it behaves like a function in mathematics. A pure function has no **observable effect** other than simply returning a value. Note the use of "observable" here---all kinds of mutations might be happening behind the scenes, but as long as we cannot observe them, they are not effects.
+
+A pure function has special characteristics:
 
 1. Because a pure function returns identical results for the same arguments, those results can reliably be placed in a lookup table, and a lookup in that table can be substituted for calling the function. This is called *referential transparency*.
 2. Calling a pure function does not change the effects of the function that calls it.
@@ -54,5 +56,11 @@ If you make a call to a database, the result is unpredictable (which means the f
 Effects are a kind of bookkeeping system that allow you to keep track of and mitigate the unpredict abilities in your program. An *effect system* provides tools to automate tracking and mitigation, but even if you are not using an effect system it can be useful to think in terms of effects.
 ## Expressing Effects in Code
 
-Effects system [do exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. However, we can do some basic exploration without them.
+[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. However, we can do some basic exploration without them. 
+
+First we'll convert errors from exceptions into effects carried by the result value of the function---notice that our function will not `raise` any exceptions, but will instead return exception objects:
+
+```python
+
+```
 
