@@ -4,7 +4,7 @@ This becomes boring. We get stimulus and grow by connecting with the outside wor
 
 When you interact with a person, they are outside your circle of certainty, and you can't anticipate what will happen. If you say "hello" to someone they may respond pleasantly, neutrally or angrily, depending on their current situation and mood. If you ask someone the time of day, they might refer to a non-digital wristwatch (not very accurate), a phone (quite accurate), or they may have no timepiece at all, or are too much in a hurry to tell you the time. They might just give you the time, but perhaps they want to talk---so you don't know how *long* it will take to get the time, and after you finish this time-retrieval transaction, that time may no longer be usable.
 
-Consider a more complex example. You are running a small storage company and you hire someone to store and fetch items for you. When you ask for a stored item, you're not sure how long it will take: the person might be on a break or moving slowly that day, the item might be near or far in the warehouse, or the person might already have a significant list of tasks to complete before they can get to your request. It's also possible that the item might not be there.  There are a number of degrees of unpredictability, and by knowing what they are you can compensate for them in various ways. If you just ignore these unpredictability factors, as we have traditionally done in programming, you can't compensate for them.
+Consider a more complex example. You are running a small storage company and you hire someone to store and fetch items for you. When you ask for a stored item, the person might bring back the item, or a reason that they couldn't get it. Also, you're not sure how long it will take: the person might be on a break or moving slowly that day, the item might be near or far in the warehouse, or the person might already have a significant list of tasks to complete before they can get to your request. It's also possible that the item might not be there.  There are a number of degrees of unpredictability, and by knowing what they are you can compensate for them in various ways. If you just ignore these unpredictability factors, as we have traditionally done in programming, you can't compensate for them.
 
 *Effects* are these unpredictability factors. When you call a function which is outside your circle of certainty, you initiate an operation that has unpredictable results; i.e. a function that may produce effects. If we know what these effects are, we can work with them to create a more reliable program. It doesn't end with reliability, though. If a system knows what the effects are for a particular function, it can provide other useful facilities.
 ## Errors are Effects
@@ -34,9 +34,7 @@ What if a function is inside your "circle of certainty," and has no effects? It 
 A pure function has special characteristics:
 
 1. Because a pure function returns identical results for the same arguments, those results can reliably be placed in a lookup table, and a lookup in that table can be substituted for calling the function. This is called *referential transparency*.
-2. Calling a pure function does not change the effects of the function that calls it.
-
-In contrast, if you're in a function that calls another function that has effects, those effects must be incorporated into the effects of the calling function.
+2. Calling a pure function does not change the effects of the function that calls it. In contrast, if you're in a function that calls another function that has effects, those effects must be incorporated into the effects of the calling function.
 ## Other Kinds of Effects
 
 Errors are a specific type of effect. A more general effect is seen when you call a "time" function. Getting the time is not a pure function because you get a different result every time you call it (the call could also fail if the underlying system doesn't include a clock, or if it has some kind of error). There's not much "mitigation" to do in this case, but you must be aware that any call to time means that your function cannot be treated as pure.
@@ -51,7 +49,7 @@ Now consider a database, the analogy of hiring a person to work storing and retr
 
 Numbers 1 and 2 are mixed together: if a transaction takes too long, how do you know whether the database is simply busy or if your request hasn't gotten through because of a network problem? And consider number 3: it's often expected that an item might not be there, which means it isn't necessarily an error and should be reported in a different way.
 
-If you make a call to a database, the result is unpredictable (which means the function you are writing is impure because it that calls the database). There are a number of effects that must be mitigated. Mitigating these effects will not make your function pure, but it can reduce the number of effects that "leak out" into anything that calls your function.
+If you make a call to a database, the result is unpredictable (which means the function you are writing is impure because it calls the database). There are a number of effects that must be mitigated. Mitigating these effects will not make your function pure, but it can reduce the number of effects that "leak out" into anything that calls your function.
 
 Effects are a kind of bookkeeping system that allow you to keep track of and mitigate the unpredict abilities in your program. An *effect system* provides tools to automate tracking and mitigation, but even if you are not using an effect system it can be useful to think in terms of effects.
 ## Expressing Effects in Code
@@ -64,3 +62,5 @@ First we'll convert errors from exceptions into effects carried by the result va
 
 ```
 
+Notes: 
+1. You can change the world or observe the world, or do both.
