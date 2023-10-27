@@ -1,2 +1,2 @@
-# ConcurrencyThoughts
+# Concurrency Thoughts
 Writing and exploring concurrency
