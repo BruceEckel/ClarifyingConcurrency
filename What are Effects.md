@@ -56,13 +56,13 @@ Effects are a kind of bookkeeping system that allow you to keep track of and mit
 
 [Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. However, we can do some basic exploration without them. 
 
-First we'll convert errors from exceptions into effects carried by the result value of the function---notice that our function will not `raise` any exceptions, but will instead return exception objects:
+First we'll convert errors from exceptions into effects carried by the result value of the function---notice that our function will not `raise` any exceptions, but will instead return exception objects. We'll start with a type to carry the either the return value or error information. So `StringResult` needs to be either a `string` OR an `err`, but it will never hold both things at the same time. 
 
 ```python
 
 ```
 
-`Result` needs to be either a `string` OR an `err`, but it will never hold both things at the same time. Thus, what we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
+What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
 
 
 
