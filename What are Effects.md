@@ -4,9 +4,11 @@ This becomes boring. We get stimulus and grow by connecting with the outside wor
 
 When you interact with a person, they are outside your circle of certainty, and you can't anticipate what will happen. If you say "hello" to someone they may respond pleasantly, neutrally or angrily, depending on their current situation and mood. If you ask someone the time of day, they might refer to a non-digital wristwatch (not very accurate), a phone (quite accurate), or they may have no timepiece at all, or are too much in a hurry to tell you the time. They might just give you the time, but perhaps they want to talk---so you don't know how *long* it will take to get the time, and after you finish this time-retrieval transaction, that time may no longer be usable.
 
-Consider a more complex example. You are running a small storage company and you hire someone to store and fetch items for you. When you ask for a stored item, the person might bring back the item, or a reason that they couldn't get it. Also, you're not sure how long it will take: the person might be on a break or moving slowly that day, the item might be near or far in the warehouse, or the person might already have a significant list of tasks to complete before they can get to your request. It's also possible that the item might not be there.  There are a number of degrees of unpredictability, and by knowing what they are you can compensate for them in various ways. If you just ignore these unpredictability factors, as we have traditionally done in programming, you can't compensate for them.
+Consider a more complex example. You run a small storage company and you hire someone to store and fetch items for you. When you ask for a stored item, the person might bring back the item, or a reason they couldn't get it. Also, you're not sure how long it will take: the person might be on a break or moving slowly that day, the item might be near or far in the warehouse, or the person might already have a significant list of tasks to complete before they can get to your request. It's also possible that the item might not be there.  There are a number of degrees of unpredictability, and by knowing what they are you can compensate for them in various ways. If you just ignore these unpredictability factors, as we have traditionally done in programming, you can't compensate for them.
 
 *Effects* are these unpredictability factors. When you call a function which is outside your circle of certainty, you initiate an operation that has unpredictable results; i.e. a function that may produce effects. If we know what these effects are, we can work with them to create a more reliable program. It doesn't end with reliability, though. If a system knows what the effects are for a particular function, it can provide other useful facilities.
+
+An effect either changes the world outside your scope (your "circle of certainty"), or observes the world. Effects often change *and* observe the world.
 ## Errors are Effects
 
 One kind of unpredictability that we *have* started to pay attention to is errors. As you cannot predict when an error will occur, these are a type of effect. Errors are very clear: if some aspect of a function call fails, it will report that failure as an error.
@@ -63,9 +65,3 @@ First we'll convert errors from exceptions into effects carried by the result va
 ```
 
 What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
-
-
-
-Notes: 
-1. You can change the world or observe the world, or do both.
-2.  Effects change and observe the world
