@@ -54,14 +54,60 @@ Numbers 1 and 2 are mixed together: if a transaction takes too long, how do you 
 If you make a call to a database, the result is unpredictable (which means the function you are writing is impure because it calls the database). There are a number of effects that must be mitigated. Mitigating these effects will not make your function pure, but it can reduce the number of effects that "leak out" into anything that calls your function.
 
 Effects are a kind of bookkeeping system that allow you to keep track of and mitigate the unpredict abilities in your program. An *effect system* provides tools to automate tracking and mitigation, but even if you are not using an effect system it can be useful to think in terms of effects.
+## Returning (not Raising) Exceptions
+
+Throwing an exception is like sending up a flare. It's not the normal way to communicate. More importantly, it assumes that someone will happen to be looking in your direction when the flare goes off. If not, your message could be lost.
+
+Our goal is to include error information in the package returned from a function call, together with the "answer" from a successful call. We could certainly make up our own set of error indicators, or
+perhaps just return a string. But why throw away all the work done creating the different types of exceptions? It makes much more sense to use those---plus it allows us to easily interact with the existing exception system, by catching exceptions and incorporating them in our error reporting.
+
+However, we want to deal with errors directly and never throw our own exceptions. So our function will not `raise` any exceptions, but will instead return `Exception` objects. The
+
+
 ## Expressing Effects in Code
 
-[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. However, we can do some basic exploration without them. 
-
-First we'll convert errors from exceptions into effects carried by the result value of the function---notice that our function will not `raise` any exceptions, but will instead return exception objects. We'll start with a type to carry the either the return value or error information. So `StringResult` needs to be either a `string` OR an `err`, but it will never hold both things at the same time. 
+Perhaps the clearest way to produce a combined result is with a *type union*, combined with pattern matching. Fortunately, Python is one of the languages that supports this:
 
 ```python
+# type_union.py
+from typing import List
+from my_error import MyError, err
 
+results: List[str | TabError | ValueError | MyError] = [
+    "eeny",
+    TabError("after eeny"),
+    "meeny",
+    ValueError("after meeny"),
+    "miney",
+    MyError("after miney"),
+]
+
+
+def fallible1(
+    n: int,
+) -> str | TabError | ValueError | MyError | None:
+    return results[n] if n < len(results) else None
+
+
+if __name__ == "__main__":
+    for n in range(len(results) + 1):
+        print(f"{n}: ", end="")
+        match fallible1(n):
+            case str(s):
+                print(f"Success -> {s}")
+            case TabError(args=(msg,)):
+                err("Tab", msg)
+            case ValueError(args=(msg,)):
+                err("Value", msg)
+            case MyError(args=(msg,)):
+                err("My", msg)
+            case None:
+                print("No result")
 ```
 
+
+## Returning a `Result` Object
+
 What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
+
+[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy.
