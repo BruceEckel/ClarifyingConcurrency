@@ -58,20 +58,22 @@ Effects are a kind of bookkeeping system that allow you to keep track of and mit
 
 Throwing an exception is like sending up a flare. It's not the normal way to communicate. More importantly, it assumes that someone will happen to be looking in your direction when the flare goes off. If not, your message could be lost.
 
-Our goal is to include error information in the package returned from a function call, together with the "answer" from a successful call. We could certainly make up our own set of error indicators, or
-perhaps just return a string. But why throw away all the work done creating the different types of exceptions? It makes much more sense to use those---plus it allows us to easily interact with the existing exception system, by catching exceptions and incorporating them in our error reporting.
+Our goal is to include error information in the package returned from a function call, together with the "answer" from a successful call. We could certainly make up our own set of error indicators, or perhaps just return a string. But why throw away all the work done creating the different types of exceptions? It makes much more sense to use those---plus it allows us to easily interact with the existing exception system, by catching exceptions and incorporating them in our error reporting.
 
-However, we want to deal with errors directly and never throw our own exceptions. So our function will not `raise` any exceptions, but will instead return `Exception` objects. The
-
-
+However, we want to deal with errors directly and never throw our own exceptions. So our function will not `raise` any exceptions, but will instead return `Exception` objects. As far as we are concerned, these objects no longer have the amazing ability to act as "flares." They are simply a convenient way for us to denote error information.
 ## Expressing Effects in Code
 
-Perhaps the clearest way to produce a combined result is with a *type union*, combined with pattern matching. Fortunately, Python is one of the languages that supports this:
+Perhaps the clearest way to produce a combined return value is with a *type union*, together with pattern matching. Fortunately, Python is one of the languages that supports this (code examples [here]()):
 
 ```python
 # type_union.py
 from typing import List
 from my_error import MyError, err
+
+
+def fallible(n: int) -> str | TabError | ValueError | MyError | None:
+    return results[n] if n < len(results) else None
+
 
 results: List[str | TabError | ValueError | MyError] = [
     "eeny",
@@ -83,16 +85,10 @@ results: List[str | TabError | ValueError | MyError] = [
 ]
 
 
-def fallible1(
-    n: int,
-) -> str | TabError | ValueError | MyError | None:
-    return results[n] if n < len(results) else None
-
-
 if __name__ == "__main__":
     for n in range(len(results) + 1):
         print(f"{n}: ", end="")
-        match fallible1(n):
+        match fallible(n):
             case str(s):
                 print(f"Success -> {s}")
             case TabError(args=(msg,)):
@@ -105,7 +101,17 @@ if __name__ == "__main__":
                 print("No result")
 ```
 
+The return value of `fallible()` is a type union: it can be either a `str` or a `TabError` or a `ValueError` or a `MyError` or `None`. The returned object can carry a single value that can be any one of these types.
 
+`fallible()` simply indexes into the `results` list; if `n` is greater than or equal to `len(results)` it returns `None`.
+
+Without the type annotation, Python would create the `results` list as holding `object` because it contains more than one type; Python doesn't automatically figure out the type union for you. Without the annotation, MyPy complains about `results`.
+
+In `__main__`, we call `fallible()` for all the elements in `results`---plus one, to demonstrate `None` behavior. The pattern match responds accordingly to each possible return type.
+
+Here we encounter a problem: Compiled languages that support pattern matching (for example Scala, Rust and Kotlin) also enforce exhaustive matching. In our case, if we left off the match for `ValueError`, the type checker would tell us that we hadn't accounted for `ValueError`, which is one of the types that the annotation for `fallible()` says it can return. An inexhaustive pattern match is an error.
+
+Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustive matching. It's possible for them to do so, but they have not advanced that far yet, which means you don't get the safety provided by exhaustive matching. This is unfortunate, but we can hope that these tools, or some new one, will eventually provide this benefit. (If you know of a tool that does, please not it in the comments --- wait, does Obsidian have comments?)
 ## Returning a `Result` Object
 
 What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
