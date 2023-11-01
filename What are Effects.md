@@ -116,4 +116,4 @@ Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustiv
 
 What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
 
-[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy.
+[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. There's a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust's built-in `Result` that, so far, has been a nice experience. The following example works with both `my_result` and `result`:
