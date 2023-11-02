@@ -205,6 +205,114 @@ if __name__ == "__main__":
 
 Now our `results` list  contains `Result[str, Exception]`, which must then either be an `Ok` or an `Err`. `fallible()` returns a `Result[str, Exception]`, but as before it can also return `None`, which is expressed by a type union. The pattern match in `__main__` checks for all possible types returned from `fallible()`.
 
-Notice the `Err` cases in the pattern match.
+Notice the `Err` cases in the pattern match, for example `case Err(TabError() as e)`. The `TabError() as e` allows us to capture the specific type of exception inside `Err` and then just use it as `e`.
 
-[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result` that, so far, has been a nice experience. The following example works with both `my_result` and `result`:
+There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result` that matches the basic structure of `my_result.py` (although `result` is far more sophisticated). `return_result.py` can be used with this library by changing the `from my_result` import to `from result`. Here we test both versions and ensure that the outputs are identical:
+```python
+# test_both.py
+import io
+import sys
+from pathlib import Path
+
+
+# Returns the output from exec(code)
+def exec_o(code: str) -> str:
+    buffer = io.StringIO()
+    sys.stdout = buffer
+    try:
+        exec(code, globals())
+    finally:
+        # Reset stdout
+        sys.stdout = sys.__stdout__
+    return buffer.getvalue()
+
+
+if __name__ == "__main__":
+    code = Path("return_result.py").read_text()
+    output1 = exec_o(code)
+    print(output1)
+
+    modified = code.replace("my_result", "result")
+    output2 = exec_o(modified)
+
+    assert output1 == output2
+```
+The argument to `exec_o()` is a `str` that contains a Python program. This program is run using Python’s built-in `exec()`, and the output of that program which normally goes to standard output is captured and returned from `exec_o()`.
+
+In `__main__` we run the original `return_result.py`, capturing and displaying the output. Then we replace `my_result` with `result`, so we are now importing the sophisticated `result` library, and the program is executed again. This time we don’t display the output but instead ensure that it is identical to the output for `my_result`. Here’s what you see when you run it:
+```
+0: Success -> eeny
+Ok('eeny')
+-------------------------
+1: Tab Error -> after eeny
+Err(TabError('after eeny'))
+-------------------------
+2: Success -> meeny
+Ok('meeny')
+-------------------------
+3: Value Error -> after meeny
+Err(ValueError('after meeny'))
+-------------------------
+4: Success -> miney
+Ok('miney')
+-------------------------
+5: My Error -> after miney
+Err(MyError('after miney'))
+-------------------------
+6: No result
+None
+-------------------------
+```
+You can see that the returned objects are either `Ok` or `Err` and the pattern match captures all the different types that come back from `fallible()`.
+## More Sophisticated Features
+
+The [Result](https://pypi.org/project/result/) library includes significantly more functionality than my oversimplified `my_result.py` provides. One of the most interesting is the `and_then()` function. Suppose you have a set of operations, like this:
+
+```python
+# operations.py
+from result import Result, Ok, Err
+
+
+def get_number(s: str) -> Result[int, Exception]:
+    try:
+        return Ok(int(s))
+    except ValueError:
+        return Err(ValueError(f"Can't convert {s}"))
+
+
+def double(n: int) -> Result[int, Exception]:
+    return Ok(n * 2)
+
+
+def to_string(n: int) -> Result[str, Exception]:
+    try:
+        return Ok(str(n))
+    except Exception as e:
+        return Err(e)
+```
+
+Each operation returns a `Result` object. If we call several of these operations and perform `Result` analysis for each call, coding becomes tedious. `and_then()` automatically checks for errors, so you can write code like this:
+
+```python
+# flatmap.py
+from result import Ok, Err
+from operations import get_number, double, to_string
+
+if __name__ == "__main__":
+    result = (
+        Ok("5")  # Try Ok("Bob")
+        .and_then(get_number)
+        .and_then(double)
+        .and_then(to_string)
+    )
+
+    match result:
+        case Ok(value):
+            print(f"Success: {value}")
+        case Err(e):
+            print(f"Error: {e}")
+```
+
+Notice the chained `and_then()` operations. For each `and_then()`, an error causes the entire `result` calculation to stop—no more `and_then()`s will be executed—and an `Err` will be the value for `Result`. This makes programming with `Result` easier and clearer.
+
+The file is called `flatmap.py` because this is the common term, which is also often named `and_then()` or `bind()`.
