@@ -64,7 +64,6 @@ However, we want to deal with errors directly and never throw our own exceptions
 ## Expressing Effects in Code
 
 Perhaps the clearest way to produce a combined return value is with a *type union*, together with pattern matching. Fortunately, Python is one of the languages that supports this. We'll start by defining our own `Exception` (code examples [here](https://github.com/BruceEckel/python-experiments/tree/main/effects)):
-
 ```python
 # my_error.py
 
@@ -72,9 +71,7 @@ Perhaps the clearest way to produce a combined return value is with a *type unio
 class MyError(Exception):
     pass
 ```
-
 Type unions are demonstrated in both the `fallible()` return type and the type for the `results` list:
-
 ```python
 # type_union.py
 from typing import List
@@ -109,7 +106,6 @@ if __name__ == "__main__":
             case None:
                 print(f"{n}: No result")
 ```
-
 The return type for `fallible()` is a type union: it can be either a `str` or a `TabError` or a `ValueError` or a `MyError` or `None`. The returned object can carry a single value that can be any one of these types.
 
 `fallible()` indexes into the `results` list. If `n` indexes outside of `results` it returns `None`.
@@ -123,8 +119,7 @@ Here we encounter a problem: Compiled languages that support pattern matching (f
 Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustive matching. It's possible for them to do so, but they have not advanced that far yet, which means you don't get the safety provided by exhaustive matching. This is unfortunate, but we can hope that these tools, or some new one, will eventually provide this benefit. (If you know of a tool that does, please note it in the comments -- wait, does Obsidian have comments?)
 ## Returning a `Result` Object
 
-What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
-
+What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to create a new `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` that can hold either the answer or an error:
 ```python
 # my_result.py
 from dataclasses import dataclass
