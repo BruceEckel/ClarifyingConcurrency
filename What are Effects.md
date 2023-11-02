@@ -1,69 +1,69 @@
-Imagine there's a circle surrounding you, representing a boundary (don't worry about the size; you have permission to resize your imaginary boundary as needed). Inside this boundary are things that you have control over in your life; things that are completely reliable and predictable, as much as that is possible. For example, you know how your toaster works, and its idiosyncrasies. Your stove, dishwasher, washing machine, shower--all these are under your control, and you can expect consistent and predictable results when you use them. You could stay in your house just using these devices, getting groceries delivered and never leaving. You would always know how things work and nothing would change. 
+Imagine there’s a circle surrounding you, representing a boundary (don’t worry about the size; you have permission to resize your imaginary boundary as needed). Inside this boundary are things that you have control over in your life; things that are completely reliable and predictable, as much as that is possible. For example, you know how your toaster works, and its idiosyncrasies. Your stove, dishwasher, washing machine, shower—all these are under your control, and you can expect consistent and predictable results when you use them. You could stay in your house just using these devices, getting groceries delivered and never leaving. You would always know how things work and nothing would change.
 
 This becomes boring. We get stimulus and grow by connecting with the outside world, where things are unpredictable. The world outside the circle.
 
-When you interact with a person, they are outside your circle of certainty, and you can't anticipate what will happen. If you say "hello" to someone they may respond pleasantly, neutrally or angrily, depending on their current situation and mood. If you ask someone the time of day, they might refer to a non-digital wristwatch (not very accurate), a phone (quite accurate), or they may have no timepiece at all, or are too much in a hurry to tell you the time. They might just give you the time, but perhaps they want to talk--so you don't know how *long* it will take to get the time, and after you finish this time-retrieval transaction, that time may no longer be usable.
+When you interact with a person, they are outside your circle of certainty, and you can’t anticipate what will happen. If you say “hello” to someone they may respond pleasantly, neutrally or angrily, depending on their current situation and mood. If you ask someone the time of day, they might refer to a non-digital wristwatch (not very accurate), a phone (quite accurate), or they may have no timepiece at all, or are too much in a hurry to tell you the time. They might just give you the time, but perhaps they want to talk—so you don’t know how *long* it will take to get the time, and after you finish this time-retrieval transaction, that time may no longer be usable.
 
-Consider a more complex example. You run a small storage company and you hire someone to store and fetch items for you. When you ask for a stored item, the person might bring back the item, or a reason they couldn't get it. Also, you're not sure how long it will take: the person might be on a break or moving slowly that day, the item might be near or far in the warehouse, or the person might already have a significant list of tasks to complete before they can get to your request. It's also possible that the item might not be there.  There are a number of degrees of unpredictability, and by knowing what they are you can compensate for them in various ways. If you just ignore these unpredictability factors, as we have traditionally done in programming, you can't compensate for them.
+Consider a more complex example. You run a small storage company and you hire someone to store and fetch items for you. When you ask for a stored item, the person might bring back the item, or a reason they couldn’t get it. Also, you’re not sure how long it will take: the person might be on a break or moving slowly that day, the item might be near or far in the warehouse, or the person might already have a significant list of tasks to complete before they can get to your request. It’s also possible that the item might not be there.  There are a number of degrees of unpredictability, and by knowing what they are you can compensate for them in various ways. If you just ignore these unpredictability factors, as we have traditionally done in programming, you can’t compensate for them.
 
-*Effects* are these unpredictability factors. When you call a function which is outside your circle of certainty, you initiate an operation that has unpredictable results; i.e. a function that may produce effects. If we know what these effects are, we can work with them to create a more reliable program. It doesn't end with reliability, though. If a system knows what the effects are for a particular function, it can provide other useful facilities.
+*Effects* are these unpredictability factors. When you call a function which is outside your circle of certainty, you initiate an operation that has unpredictable results; i.e. a function that may produce effects. If we know what these effects are, we can work with them to create a more reliable program. It doesn’t end with reliability, though. If a system knows what the effects are for a particular function, it can provide other useful facilities.
 
-An effect either changes the world outside your scope (your "circle of certainty"), or observes the world. Effects often change *and* observe the world.
+An effect either changes the world outside your scope (your “circle of certainty”), or observes the world. Effects often change *and* observe the world.
 ## Errors are Effects
 
 One kind of unpredictability that we *have* started to pay attention to is errors. As you cannot predict when an error will occur, these are a type of effect. Errors are very clear: if some aspect of a function call fails, it will report that failure as an error.
 
-Exceptions are a problem here. Exceptions exist in a world outside normal function control flow. When an exception is thrown, you can choose to catch it and handle it ... or ignore it, at which point it becomes a runtime error. What we want is for the type system to ensure that we have properly dealt with all errors, *before* the program runs. 
+Exceptions are a problem here. Exceptions exist in a world outside normal function control flow. When an exception is thrown, you can choose to catch it and handle it ... or ignore it, at which point it becomes a runtime error. What we want is for the type system to ensure that we have properly dealt with all errors, *before* the program runs.
 
-The further away you get from the site of a thrown exception, the less context information you have. We'd like the type system to require full error coverage at the site of each function call, rather than anywhere on the exception stack. You still have the *option* of passing the error on, but the type system requires that choice to be made at the function call site.
+The further away you get from the site of a thrown exception, the less context information you have. We’d like the type system to require full error coverage at the site of each function call, rather than anywhere on the exception stack. You still have the *option* of passing the error on, but the type system requires that choice to be made at the function call site.
 
 The problem happens because we traditionally think of functions like this:
 
 1. You pass any number of arguments to the function.
 2. The function returns a single result.
 
-We have always thought of the result as a single value: the answer you desire. In reality, you might not get that answer because there's a failure, or the answer might not exist. To report errors without using exceptions, we *expand the result* to include not just the desired answer but also the failure information. Instead of returning a single value of the type of the desired answer, we return a structure containing the answer *plus* error information.
+We have always thought of the result as a single value: the answer you desire. In reality, you might not get that answer because there’s a failure, or the answer might not exist. To report errors without using exceptions, we *expand the result* to include not just the desired answer but also the failure information. Instead of returning a single value of the type of the desired answer, we return a structure containing the answer *plus* error information.
 
-Now when you call such a function, you can't just grab the answer and go on your merry way. You are forced to unpack the returned structure, first looking for error information and dealing with that. Only if there is no error information do you take the answer and continue.
+Now, when you call such a function, you can’t just grab the answer and go on your merry way. You are forced to unpack the returned structure. If there’s an error, you must deal with it. Only if there is no error information do you take the answer and continue.
 
-The result is typed, and that type information means that the type system is able to track your code, and enforce that you have handled all possible error conditions. The only way for errors to slip through the cracks is if you explicitly push them into those cracks. You must write the code that does that, and now that code is visible as a decision you've consciously made (ignoring an exception requires no code at all, so no one can see that you've done it).
+The result is typed, and that type information means that the type system is able to track your code, and enforce that you have handled all possible error conditions. The only way for errors to slip through the cracks is if you explicitly push them into those cracks. You must write the code that does that, and now that code is visible and discoverable as a decision you’ve consciously made (ignoring an exception requires no code at all, so no one can see that you’ve done it).
 
 By treating errors as effects, your programming system is able to guarantee that you mitigate all those effects, thus producing a more reliable program.
 ## Pure Functions & Referential Transparency
 
-What if a function is inside your "circle of certainty," and has no effects? It produces the same result for the same arguments, every time, with no surprises. We call this a *pure function*, and it behaves like a function in mathematics. A pure function has no **observable effect** other than simply returning a value. Note the use of "observable" here--all kinds of mutations might be happening behind the scenes, but as long as we cannot observe them, they are not effects.
+What if a function is inside your “circle of certainty,” and has no effects? It produces the same result for the same arguments, every time, with no surprises. We call this a *pure function*, and it behaves like a function in mathematics. A pure function has no **observable effect** other than simply returning a value. Note the use of “observable” here—all kinds of mutations might be happening behind the scenes, but as long as we cannot observe them, they are not effects.
 
 A pure function has special characteristics:
 
 1. Because a pure function returns identical results for the same arguments, those results can reliably be placed in a lookup table, and a lookup in that table can be substituted for calling the function. This is called *referential transparency*.
-2. Calling a pure function does not change the effects of the function that calls it. In contrast, if you're in a function that calls another function that has effects, those effects must be incorporated into the effects of the calling function.
+2. Calling a pure function does not change the effects of the function that calls it. In contrast, if you’re in a function that calls another function that has effects, those effects must be incorporated into the effects of the calling function.
 ## Other Kinds of Effects
 
-Errors are a specific type of effect. A more general effect is seen when you call a "time" function. Getting the time is not a pure function because you get a different result every time you call it (the call could also fail if the underlying system doesn't include a clock, or if it has some kind of error). There's not much "mitigation" to do in this case, but you must be aware that any call to time means that your function cannot be treated as pure.
+Errors are a specific type of effect. A more general effect is seen when you call a “time” function. Getting the time is not a pure function because you get a different result every time you call it (the call could also fail if the underlying system doesn’t include a clock, or if it has some kind of error). There’s not much “mitigation” to do in this case, but you must be aware that any call to time means that your function cannot be treated as pure.
 
-Now consider a database, the analogy of hiring a person to work storing and retrieving items in your warehouse. There are a number of effects you need to mitigate:
+Now consider a database, the analogy of hiring a person to store and retrieve items in your warehouse. There are a number of effects you need to mitigate:
 
-1. You don't know how long the transaction will take. The database might currently be bogged down with requests.
-2. The network or database connection might fail, and your request doesn't get there.
-3. You don't know if an item you want to retrieve is there.
+1. You don’t know how long the transaction will take. The database might currently be bogged down with requests.
+2. The network or database connection might fail, and your request doesn’t get there.
+3. You don’t know if an item you want to retrieve is there.
 4. There might already be an item in the location where you want to store something.
 5. ... And a number of other things can go wrong when dealing with a database.
 
-Numbers 1 and 2 are mixed together: if a transaction takes too long, how do you know whether the database is simply busy or if your request hasn't gotten through because of a network problem? And consider number 3: it's often expected that an item might not be there, which means it isn't necessarily an error and should be reported in a different way.
+Numbers 1 and 2 are mixed together: if a transaction takes too long, how do you know whether the database is simply busy or if your request hasn’t gotten through because of a network problem? And consider number 3: it’s often expected that an item might not be there, which means it isn’t necessarily an error and should be reported in a different way.
 
-If you make a call to a database, the result is unpredictable (which means the function you are writing is impure because it calls the database). There are a number of effects that must be mitigated. Mitigating these effects will not make your function pure, but it can reduce the number of effects that "leak out" into anything that calls your function.
+If you make a call to a database, the result is unpredictable (which means the function you are writing is impure because it calls the database). Mitigating these effects will not make your function pure, but it can reduce the number of effects that “leak out” into anything that calls your function.
 
-Effects are a kind of bookkeeping system that allow you to keep track of and mitigate the unpredict abilities in your program. An *effect system* provides tools to automate tracking and mitigation, but even if you are not using an effect system it can be useful to think in terms of effects.
+Effects are a kind of bookkeeping system that allow you to keep track of and mitigate the unpredictabilities in your program. An *effect system* provides tools to automate tracking and mitigation, but even if you are not using an effect system it can be useful to think in terms of effects.
 ## Returning (not Raising) Exceptions
 
-Throwing an exception is like sending up a flare. It's not the normal way to communicate. More importantly, it assumes that someone will happen to be looking in your direction when the flare goes off. If not, your message could be lost.
+Throwing an exception is like sending up a flare. It’s not the normal way to communicate. More importantly, it assumes that someone happens to be looking in your direction when the flare goes off. If not, your message can be lost.
 
-Our goal is to include error information in the package returned from a function call, together with the "answer" from a successful call. We could certainly make up our own set of error indicators, or perhaps just return a string. But why throw away all the work done creating the different types of exceptions? It makes much more sense to use those--plus it allows us to easily interact with the existing exception system, by catching exceptions and incorporating them in our error reporting.
+Our goal is to include error information in the package returned from a function call, together with the “answer” from a successful call. We could certainly make up our own set of error indicators, or perhaps just return a string. But why throw away all the work that’s already been done creating the different types of exceptions? It makes much more sense to use those—plus it allows us to easily interact with the existing exception system, by catching exceptions and incorporating them in our error reporting.
 
-However, we want to deal with errors directly and never throw our own exceptions. So our function will not `raise` any exceptions, but will instead return `Exception` objects. As far as we are concerned, these objects no longer have the amazing ability to act as "flares." They are simply a convenient way for us to denote error information.
+However, we want to deal with errors directly and never throw our own exceptions. So our function will not `raise` any exceptions, but will instead return `Exception` objects. As far as we are concerned, these objects no longer have the amazing ability to act as “flares.” They are simply a convenient way for us to denote error information.
 ## Expressing Effects in Code
 
-Perhaps the clearest way to produce a combined return value is with a *type union*, together with pattern matching. Fortunately, Python is one of the languages that supports this. We'll start by defining our own `Exception` (code examples [here](https://github.com/BruceEckel/python-experiments/tree/main/effects)):
+Perhaps the clearest way to produce a combined return value is with a *type union*, together with pattern matching. Fortunately, Python is one of the languages that supports this. We’ll start by defining our own `Exception` (code examples [here](https://github.com/BruceEckel/python-experiments/tree/main/effects)):
 ```python
 # my_error.py
 
@@ -110,16 +110,16 @@ The return type for `fallible()` is a type union: it can be either a `str` or a 
 
 `fallible()` indexes into the `results` list. If `n` indexes outside of `results` it returns `None`.
 
-Without the type annotation, Python would treat the `results` list as a collection of `object` because it contains more than one type. Python doesn't automatically figure out the type union for you. Without the annotation on `results`, MyPy complains.
+Without the type annotation, Python would treat the `results` list as a collection of `object` because it contains more than one type. Python doesn’t automatically figure out the type union for you. Without the annotation on `results`, MyPy complains.
 
-In `__main__`, we call `fallible()` for all the elements in `results`--plus one, to demonstrate `None` behavior. The pattern match responds accordingly to each possible return type.
+In `__main__`, we call `fallible()` for all the elements in `results`—plus one, to demonstrate `None` behavior. The pattern match responds accordingly to each possible return type.
 
-Here we encounter a problem: Compiled languages that support pattern matching (for example Scala, Rust and Kotlin) also enforce exhaustive matching. In our case, if we left off the match for `ValueError`, the type checker would tell us we hadn't accounted for `ValueError`, which is one of the types that the annotation for `fallible()` says it can return. An inexhaustive pattern match is an error.
+Here we encounter a problem: Compiled languages that support pattern matching (for example Scala, Rust and Kotlin) also enforce exhaustive matching. In our case, if we left off the match for `ValueError`, the type checker would tell us we hadn’t accounted for `ValueError`, which is one of the types that the annotation for `fallible()` says it can return. An inexhaustive pattern match is an error.
 
-Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustive matching. It's possible for them to do so, but they have not advanced that far yet, which means you don't get the safety provided by exhaustive matching. This is unfortunate, but we can hope that these tools, or some new one, will eventually provide this benefit. (If you know of a tool that does, please note it in the comments -- wait, does Obsidian have comments?)
+Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustive matching. It’s possible for them to do so, but they have not advanced that far yet, which means you don’t get the safety provided by exhaustive matching. This is unfortunate, but we can hope that these tools, or some new one, will eventually provide this benefit.
 ## Returning a `Result` Object
 
-What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to create a new `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` that can hold either the answer or an error:
+What we would really like to use for `Result` is an enumeration, but unfortunately Python’s `Enum` is fairly limited: it creates a single immutable object. We need to create a new `Result` for each call to `fallible()`, and we can’t do that with Python’s `Enum` (Rust’s enumerations are complete, and allow this). So instead, we create a `dataclass` that can hold either the answer or an error:
 ```python
 # my_result.py
 from dataclasses import dataclass
@@ -156,4 +156,4 @@ class Err(Result[T, E]):
 
 
 
-[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. There's a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust's built-in `Result` that, so far, has been a nice experience. The following example works with both `my_result` and `result`:
+[Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result` that, so far, has been a nice experience. The following example works with both `my_result` and `result`:
