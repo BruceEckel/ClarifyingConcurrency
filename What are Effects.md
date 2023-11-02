@@ -112,9 +112,17 @@ The return type for `fallible()` is a type union: it can be either a `str` or a 
 
 Without the type annotation, Python would treat the `results` list as a collection of `object` because it contains more than one type. Python doesn’t automatically figure out the type union for you. Without the annotation on `results`, MyPy complains.
 
-In `__main__`, we call `fallible()` for all the elements in `results`—plus one, to demonstrate `None` behavior. The pattern match responds accordingly to each possible return type.
-
-Here we encounter a problem: Compiled languages that support pattern matching (for example Scala, Rust and Kotlin) also enforce exhaustive matching. In our case, if we left off the match for `ValueError`, the type checker would tell us we hadn’t accounted for `ValueError`, which is one of the types that the annotation for `fallible()` says it can return. An inexhaustive pattern match is an error.
+In `__main__`, we call `fallible()` for all the elements in `results`—plus one, to demonstrate `None` behavior. The pattern match responds accordingly to each possible return type. Here's the output:
+```
+0: Success -> eeny
+1: Tab Error -> after eeny
+2: Success -> meeny
+3: Value Error -> after meeny
+4: Success -> miney
+5: My Error -> after miney
+6: No result
+```
+Compiled languages that support pattern matching (for example Scala, Rust and Kotlin) also enforce *exhaustive* matching. In our case, if we left off the match for `ValueError`, the type checker would tell us we hadn’t accounted for `ValueError`, which is one of the types that the annotation for `fallible()` says it can return. An inexhaustive pattern match is an error.
 
 Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustive matching. It’s possible for them to do so, but they have not advanced that far yet, which means you don’t get the safety provided by exhaustive matching. This is unfortunate, but we can hope that these tools, or some new one, will eventually provide this benefit.
 ## Returning a `Result` Object
@@ -161,7 +169,7 @@ A `TypeVar` allows you to create a type variable, which can be used as a stand-i
 
 `Ok` is a subclass of `Result` representing a successful result. `Err` represents a failed result or an error. The `__post_init__` methods guarantee that you cannot have an `Ok` object holding an exception or an `Err` object that does *not* hold an exception.
 
-Now `fallible()` can return `Result` objects:
+In this new version, `fallible()` returns `Result` objects:
 ```python
 # return_result.py
 from typing import List
@@ -203,11 +211,11 @@ if __name__ == "__main__":
         print(f"{result}\n" + "-" * 25)
 ```
 
-Now our `results` list  contains `Result[str, Exception]`, which must then either be an `Ok` or an `Err`. `fallible()` returns a `Result[str, Exception]`, but as before it can also return `None`, which is expressed by a type union. The pattern match in `__main__` checks for all possible types returned from `fallible()`.
+The `results` list  now contains `Result[str, Exception]`, which must be either an `Ok` or an `Err`. `fallible()` returns a `Result[str, Exception]`, but as before it can also return `None`, which is expressed by a type union. The pattern match in `__main__` checks for all possible types returned from `fallible()`.
 
 Notice the `Err` cases in the pattern match, for example `case Err(TabError() as e)`. The `TabError() as e` allows us to capture the specific type of exception inside `Err` and then just use it as `e`.
 
-There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result` that matches the basic structure of `my_result.py` (although `result` is far more sophisticated). `return_result.py` can be used with this library by changing the `from my_result` import to `from result`. Here we test both versions and ensure that the outputs are identical:
+There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result`. It matches the basic structure of `my_result.py`, although `result` is far more sophisticated. `return_result.py` can be used with this library by changing the `my_result` import to `result`. Here we test both versions and ensure that the outputs are identical:
 ```python
 # test_both.py
 import io
@@ -239,7 +247,7 @@ if __name__ == "__main__":
 ```
 The argument to `exec_o()` is a `str` that contains a Python program. This program is run using Python’s built-in `exec()`, and the output of that program which normally goes to standard output is captured and returned from `exec_o()`.
 
-In `__main__` we run the original `return_result.py`, capturing and displaying the output. Then we replace `my_result` with `result`, so we are now importing the sophisticated `result` library, and the program is executed again. This time we don’t display the output but instead ensure that it is identical to the output for `my_result`. Here’s what you see when you run it:
+In `__main__` we run the original `return_result.py`, capturing and displaying the output. Then we replace `my_result` with `result`, so we are now importing the sophisticated `result` library, and the program is executed again. This time we don’t display the output but instead ensure that it is identical to the output from the original `my_result`. Here’s what you see when you run it:
 ```
 0: Success -> eeny
 Ok('eeny')
@@ -263,7 +271,7 @@ Err(MyError('after miney'))
 None
 -------------------------
 ```
-You can see that the returned objects are either `Ok` or `Err` and the pattern match captures all the different types that come back from `fallible()`.
+The returned objects are either `Ok` or `Err` and the pattern match captures all the different types that come back from `fallible()`.
 ## More Sophisticated Features
 
 The [Result](https://pypi.org/project/result/) library includes significantly more functionality than my oversimplified `my_result.py` provides. One of the most interesting is the `and_then()` function. Suppose you have a set of operations, like this:
