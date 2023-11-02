@@ -127,7 +127,7 @@ Compiled languages that support pattern matching (for example Scala, Rust and Ko
 Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustive matching. It’s possible for them to do so, but they have not advanced that far yet, which means you don’t get the safety provided by exhaustive matching. This is unfortunate, but we can hope that these tools, or some new one, will eventually provide this benefit.
 ## Returning a `Result` Object
 
-What we would really like to use for `Result` is an enumeration, but unfortunately Python’s `Enum` is fairly limited: it creates a single immutable object. We need to create a new `Result` for each call to `fallible()`, and we can’t do that with Python’s `Enum` (Rust’s enumerations are complete, and allow this). So instead, we create a `dataclass` that can hold either the answer or an error:
+What we would really like to use for `Result` is an enumeration, but unfortunately Python’s `Enum` is limited: it creates a single immutable object. We need to create a new `Result` for each call to `fallible()`, and we can’t do that with Python’s `Enum` (Rust’s enumerations are complete, and allow this). So instead, we create a `dataclass` that can hold either the answer or an error:
 ```python
 # my_result.py
 from dataclasses import dataclass
@@ -169,7 +169,7 @@ A `TypeVar` allows you to create a type variable, which can be used as a stand-i
 
 `Ok` is a subclass of `Result` representing a successful result. `Err` represents a failed result or an error. The `__post_init__` methods guarantee that you cannot have an `Ok` object holding an exception or an `Err` object that does *not* hold an exception.
 
-In this new version, `fallible()` returns `Result` objects:
+The new version of `fallible()` returns `Result` objects:
 ```python
 # return_result.py
 from typing import List
@@ -215,7 +215,7 @@ The `results` list  now contains `Result[str, Exception]`, which must be either 
 
 Notice the `Err` cases in the pattern match, for example `case Err(TabError() as e)`. The `TabError() as e` allows us to capture the specific type of exception inside `Err` and then just use it as `e`.
 
-There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result`. It matches the basic structure of `my_result.py`, although `result` is far more sophisticated. `return_result.py` can be used with this library by changing the `my_result` import to `result`. Here we test both versions and ensure that the outputs are identical:
+There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result`. It matches the basic structure of `my_result.py`, although `result` is far more sophisticated. Thus, `return_result.py` can be used with this library by changing the `my_result` import to `result`. Here we test both versions and ensure that the outputs are identical:
 ```python
 # test_both.py
 import io
@@ -245,7 +245,7 @@ if __name__ == "__main__":
 
     assert output1 == output2
 ```
-The argument to `exec_o()` is a `str` that contains a Python program. This program is run using Python’s built-in `exec()`, and the output of that program which normally goes to standard output is captured and returned from `exec_o()`.
+The argument to `exec_o()` is a `str` that contains a Python program. This program is run using Python’s built-in `exec()`, and the output of that program, which normally goes to standard output, is captured and returned from `exec_o()`.
 
 In `__main__` we run the original `return_result.py`, capturing and displaying the output. Then we replace `my_result` with `result`, so we are now importing the sophisticated `result` library, and the program is executed again. This time we don’t display the output but instead ensure that it is identical to the output from the original `my_result`. Here’s what you see when you run it:
 ```
@@ -321,6 +321,6 @@ if __name__ == "__main__":
             print(f"Error: {e}")
 ```
 
-Notice the chained `and_then()` operations. For each `and_then()`, an error causes the entire `result` calculation to stop—no more `and_then()`s will be executed—and an `Err` will be the value for `Result`. This makes programming with `Result` easier and clearer.
+Notice the chained `and_then()` operations. For each `and_then()`, an error causes the entire `result` calculation to stop—no further `and_then()`s will be executed—and an `Err` will be the value for `Result`. This makes programming with `Result` easier and clearer.
 
 The file is called `flatmap.py` because “flatmap” is the common term, which is also often named “and_then” or “bind.”
