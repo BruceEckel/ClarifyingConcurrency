@@ -63,16 +63,26 @@ Our goal is to include error information in the package returned from a function
 However, we want to deal with errors directly and never throw our own exceptions. So our function will not `raise` any exceptions, but will instead return `Exception` objects. As far as we are concerned, these objects no longer have the amazing ability to act as "flares." They are simply a convenient way for us to denote error information.
 ## Expressing Effects in Code
 
-Perhaps the clearest way to produce a combined return value is with a *type union*, together with pattern matching. Fortunately, Python is one of the languages that supports this (code examples [here]()):
+Perhaps the clearest way to produce a combined return value is with a *type union*, together with pattern matching. Fortunately, Python is one of the languages that supports this. We'll start by defining our own `Exception` (code examples [here](https://github.com/BruceEckel/python-experiments/tree/main/effects)):
+
+```python
+# my_error.py
+
+
+class MyError(Exception):
+    pass
+```
+
+Type unions are demonstrated in both the `fallible()` return type and the type for the `results` list:
 
 ```python
 # type_union.py
 from typing import List
-from my_error import MyError, err
+from my_error import MyError
 
 
 def fallible(n: int) -> str | TabError | ValueError | MyError | None:
-    return results[n] if n < len(results) else None
+    return results[n] if n in range(len(results)) else None
 
 
 results: List[str | TabError | ValueError | MyError] = [
@@ -87,25 +97,24 @@ results: List[str | TabError | ValueError | MyError] = [
 
 if __name__ == "__main__":
     for n in range(len(results) + 1):
-        print(f"{n}: ", end="")
         match fallible(n):
             case str(s):
-                print(f"Success -> {s}")
-            case TabError(args=(msg,)):
-                err("Tab", msg)
-            case ValueError(args=(msg,)):
-                err("Value", msg)
-            case MyError(args=(msg,)):
-                err("My", msg)
+                print(f"{n}: Success -> {s}")
+            case TabError() as e:
+                print(f"{n}: Tab Error ->", e)
+            case ValueError() as e:
+                print(f"{n}: Value Error ->", e)
+            case MyError() as e:
+                print(f"{n}: My Error ->", e)
             case None:
-                print("No result")
+                print(f"{n}: No result")
 ```
 
-The return value of `fallible()` is a type union: it can be either a `str` or a `TabError` or a `ValueError` or a `MyError` or `None`. The returned object can carry a single value that can be any one of these types.
+The return type for `fallible()` is a type union: it can be either a `str` or a `TabError` or a `ValueError` or a `MyError` or `None`. The returned object can carry a single value that can be any one of these types.
 
-`fallible()` simply indexes into the `results` list; if `n` is greater than or equal to `len(results)` it returns `None`.
+`fallible()` indexes into the `results` list. If `n` indexes outside of `results` it returns `None`.
 
-Without the type annotation, Python would create the `results` list as holding `object` because it contains more than one type; Python doesn't automatically figure out the type union for you. Without the annotation on `results`, MyPy complains.
+Without the type annotation, Python would treat the `results` list as a collection of `object` because it contains more than one type. Python doesn't automatically figure out the type union for you. Without the annotation on `results`, MyPy complains.
 
 In `__main__`, we call `fallible()` for all the elements in `results`--plus one, to demonstrate `None` behavior. The pattern match responds accordingly to each possible return type.
 
@@ -115,5 +124,41 @@ Unfortunately, the current versions of MyPy and PyRight do not enforce exhaustiv
 ## Returning a `Result` Object
 
 What we would really like to use for `Result` is an enumeration, but unfortunately Python's `Enum` is fairly limited: it creates a single immutable object. We need to dynamically create a `Result` for each call to `fallible()`, and we can't do that with Python's `Enum` (Rust's enumerations are complete, and allow this). So instead, we create a `dataclass` where the values default to `None`, but keep in mind this is a substitute for a full-fledged enumeration feature.
+
+```python
+# my_result.py
+from dataclasses import dataclass
+from typing import Generic, TypeVar
+
+T = TypeVar("T")  # Any type
+E = TypeVar("E", bound=Exception)  # Only Exceptions
+
+
+@dataclass(frozen=True)
+class Result(Generic[T, E]):
+    value: T | E
+
+
+@dataclass(frozen=True)
+class Ok(Result[T, E]):
+    def __post_init__(self):
+        assert not isinstance(self.value, Exception)
+
+    def __repr__(self) -> str:
+        return f"Ok({self.value!r})"
+
+
+@dataclass(frozen=True)
+class Err(Result[T, E]):
+    def __post_init__(self):
+        assert isinstance(self.value, Exception)
+
+    def __repr__(self) -> str:
+        return f"Err({self.value!r})"
+```
+
+
+
+
 
 [Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. There's a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust's built-in `Result` that, so far, has been a nice experience. The following example works with both `my_result` and `result`:
