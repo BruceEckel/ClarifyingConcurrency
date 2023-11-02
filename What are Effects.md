@@ -315,4 +315,4 @@ if __name__ == "__main__":
 
 Notice the chained `and_then()` operations. For each `and_then()`, an error causes the entire `result` calculation to stop—no more `and_then()`s will be executed—and an `Err` will be the value for `Result`. This makes programming with `Result` easier and clearer.
 
-The file is called `flatmap.py` because this is the common term, which is also often named `and_then()` or `bind()`.
+The file is called `flatmap.py` because “flatmap” is the common term, which is also often named “and_then” or “bind.”
