@@ -108,7 +108,7 @@ if __name__ == "__main__":
 ```
 The return type for `fallible()` is a type union: it can be either a `str` or a `TabError` or a `ValueError` or a `MyError` or `None`. The returned object can carry a single value that can be any one of these types.
 
-`fallible()` indexes into the `results` list. If `n` indexes outside of `results` it returns `None`.
+`fallible()` indexes into the `results` list. If the `n` argument indexes outside of `results` then `fallible()` returns `None`.
 
 Without the type annotation, Python would treat the `results` list as a collection of `object` because it contains more than one type. Python doesn’t automatically figure out the type union for you. Without the annotation on `results`, MyPy complains.
 
@@ -152,8 +152,59 @@ class Err(Result[T, E]):
         return f"Err({self.value!r})"
 ```
 
+A `TypeVar` allows you to create a type variable, which can be used as a stand-in for any type. It’s Python’s way to create generic classes or functions.
+
+- `T = TypeVar("T")` is a generic type variable that can represent any type.
+- `E = TypeVar("E", bound=Exception)` is bounded to the `Exception` class—it can be any subtype of `Exception`.
+
+`Result` is a generic class that can hold an answer value of type `T` or an exception of type `E`. The `Generic[T, E]` in the class definition indicates that `Result` is parameterized by two types: `T` and `E`.
+
+`Ok` is a subclass of `Result` representing a successful result. `Err` represents a failed result or an error. The `__post_init__` methods guarantee that you cannot have an `Ok` object holding an exception or an `Err` object that does *not* hold an exception.
+
+Now `fallible()` can return `Result` objects:
+```python
+# return_result.py
+from typing import List
+from my_error import MyError
+from my_result import Result, Ok, Err
 
 
+def fallible(n: int) -> Result[str, Exception] | None:
+    return results[n] if n in range(len(results)) else None
 
+
+results: List[Result[str, Exception]] = [
+    Ok("eeny"),
+    Err(TabError("after eeny")),
+    Ok("meeny"),
+    Err(ValueError("after meeny")),
+    Ok("miney"),
+    Err(MyError("after miney")),
+]
+
+if __name__ == "__main__":
+    for n in range(len(results) + 1):
+        result = fallible(n)
+
+        match result:
+            case None:
+                print(f"{n}: No result")
+            case Ok(value):
+                print(f"{n}: Success -> {value}")
+            case Err(TabError() as e):
+                print(f"{n}: Tab Error ->", e)
+            case Err(ValueError() as e):
+                print(f"{n}: Value Error ->", e)
+            case Err(MyError() as e):
+                print(f"{n}: My Error ->", e)
+            case Err(Exception() as e):
+                print(f"{n}: Unknown Error ->", e)
+
+        print(f"{result}\n" + "-" * 25)
+```
+
+Now our `results` list  contains `Result[str, Exception]`, which must then either be an `Ok` or an `Err`. `fallible()` returns a `Result[str, Exception]`, but as before it can also return `None`, which is expressed by a type union. The pattern match in `__main__` checks for all possible types returned from `fallible()`.
+
+Notice the `Err` cases in the pattern match.
 
 [Effects systems](https://pypi.org/project/effect/) [exist in Python](https://github.com/suned/pfun), enabled by the introduction of type annotations and type checkers like MyPy. There’s a Python library called [result](https://github.com/rustedpy/result/tree/master)which is designed after Rust’s built-in `Result` that, so far, has been a nice experience. The following example works with both `my_result` and `result`:
