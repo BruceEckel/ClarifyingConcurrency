@@ -13,7 +13,7 @@ An effect either changes the world outside your scope (your “circle of certain
 
 One kind of unpredictability that we *have* started to pay attention to is errors. As you cannot predict when an error will occur, these are a type of effect. Errors are very clear: if some aspect of a function call fails, it will report that failure as an error.
 
-Exceptions are a problem here. Exceptions exist in a world outside normal function control flow. When an exception is thrown, you can choose to catch it and handle it ... or ignore it, at which point it becomes a runtime error. What we want is for the type system to ensure that we have properly dealt with all errors, *before* the program runs.
+Exceptions are a problem here. Exceptions exist in a world outside normal function control flow. When an exception is thrown, you can choose to catch it and handle it … or ignore it, at which point it becomes a runtime error. What we want is for the type system to ensure that we have properly dealt with all errors, *before* the program runs.
 
 The further away you get from the site of a thrown exception, the less context information you have. We’d like the type system to require full error coverage at the site of each function call, rather than anywhere on the exception stack. You still have the *option* of passing the error on, but the type system requires that choice to be made at the function call site.
 
