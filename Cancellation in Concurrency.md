@@ -42,7 +42,7 @@ We want to demonstrate that Python **async** coroutines properly support cancell
 
 To verify that local objects get properly cleaned up during cancellation, we define an object that tracks its own creation and destruction:
 
-```
+```python
 # obj.py
 
 class Obj:
@@ -61,7 +61,7 @@ The `~` indicates that something is being cleaned up (reminiscent of C++).
 
 Now we create a task that contains `Obj` creations in three places, interspersed with two `sleep()` suspension points:
 
-```
+```python
 # task.py
 import asyncio
 from obj import Obj
@@ -91,7 +91,7 @@ When you have a reference to a task, you can call `cancel()` on that reference. 
 
 The `track()` function cancels a task or simply displays a message. In either case, it displays a list of currently “live” coroutines:
 
-```
+```python
 # track.py
 import asyncio
 
@@ -115,7 +115,7 @@ def track(
 
 The `main()` program creates a group of tasks using a dictionary comprehension. It then cancels some of them at various later times. The calls to `sleep()` allow the other tasks to run and catch up with the new state of the system:
 
-```
+```python
 # cancellation.py
 import asyncio
 from task import task
@@ -196,7 +196,7 @@ What about the situation described earlier, where a task gets cancelled after ac
 
 To test this we need to track the lifecycle of a lock, especially the “enter” method when a lock gets acquired and the “exit” method when it is released (code can be found [here](https://github.com/BruceEckel/python-experiments/tree/main/lock_cancellation/src)). We do this by inheriting from `asyncio.Lock`:
 
-```
+```python
 # trace_lock.py
 import asyncio
 
@@ -219,7 +219,7 @@ class TraceLock(asyncio.Lock):
 
 In the following code, `task_with_lock()` acquires a `TraceLock` and then `sleep()` s for five seconds. `main()` starts a task, waits for two seconds, then cancels that task—while `task_with_lock()` is still holding the lock.
 
-```
+```python
 # lock_cancellation.py
 import asyncio
 from trace_lock import TraceLock

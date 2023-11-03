@@ -16,7 +16,41 @@ There’s some nice coverage of Python 3.11 task groups and exception groups [he
 
 Here’s an example using 3.11 task groups ( [source](https://github.com/BruceEckel/python-experiments/blob/main/task-group/src/sleeper-asyncio.py)):
 
-[![](https://substack-post-media.s3.amazonaws.com/public/images/5c0b80a3-6845-4b8f-b949-53ad20260cdc_622x793.png)](https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F5c0b80a3-6845-4b8f-b949-53ad20260cdc_622x793.png)
+```python
+# sleeper-asyncio.py
+import asyncio
+
+
+def show_tasks(msg: str):
+    for task in asyncio.all_tasks():
+        running = task.get_coro().cr_running
+        print(
+            f"{task.get_name()}[{running}]",
+            end=" ",
+        )
+    print(f"\n{msg}\n" + "-" * 25)
+
+
+async def nap(id: str, secs: int):
+    show_tasks(f"{id} napping {secs}s")
+    await asyncio.sleep(secs)
+    show_tasks(f"{id} woken after {secs}s")
+
+
+async def main():
+    for task in asyncio.all_tasks():
+        if task.get_coro().__name__ == "main":
+            task.set_name("Main")
+    async with asyncio.TaskGroup() as tg:
+        tg.create_task(nap("A", 5), name="A")
+        tg.create_task(nap("B", 3), name="B")
+        tg.create_task(nap("C", 1), name="C")
+        show_tasks("tasks created")
+    show_tasks("Tasks complete")
+
+
+asyncio.run(main())
+```
 
 `show_tasks()` allows us to track the async behavior using some of the instrumentation functions provided by the `asyncio` library. `nap()` displays information before and after it sleeps. Every async library has its own version of `sleep()`, as well as other functionality, because each library has its own way to indicate suspension points, which are also points to check for cancellation.
 
@@ -61,7 +95,45 @@ At the end of the context-manager scope, after line 29 in the code, you’ll see
 
 Here’s what the program looks like after translating to Trio ( [source](https://github.com/BruceEckel/python-experiments/blob/main/task-group/src/sleeper-trio.py)):
 
-[![](https://substack-post-media.s3.amazonaws.com/public/images/77c31a52-207d-4ab8-afa6-e42161ae51dd_672x878.png)](https://substackcdn.com/image/fetch/f_auto,q_auto:good,fl_progressive:steep/https%3A%2F%2Fsubstack-post-media.s3.amazonaws.com%2Fpublic%2Fimages%2F77c31a52-207d-4ab8-afa6-e42161ae51dd_672x878.png)
+```python
+# sleeper-trio.py
+import trio
+
+
+def tasks():
+    ct = trio.lowlevel.current_task()
+    return ct.parent_nursery.child_tasks
+
+
+def show_tasks(msg: str):
+    for t in tasks():
+        print(
+            f"{t.name}[{t.coro.cr_running}]",
+            end=" ",
+        )
+    print(f"\n{msg}\n" + "-" * 25)
+
+
+async def nap(id: str, secs: int):
+    show_tasks(f"{id} napping {secs}s")
+    await trio.sleep(secs)
+    show_tasks(f"{id} woken after {secs}s")
+
+
+async def main():
+    for task in tasks():
+        if task.coro.__name__ == "main":
+            task.name = "Main"
+    async with trio.open_nursery() as tg:
+        tg.start_soon(nap, "A", 5, name="A")
+        tg.start_soon(nap, "B", 3, name="B")
+        tg.start_soon(nap, "C", 1, name="C")
+        show_tasks("tasks created")
+    show_tasks("Tasks complete")
+
+
+trio.run(main)
+```
 
 The instrumentation is a bit more awkward, but it looks roughly the same. `asyncio.TaskGroup()` becomes ` trio.open_nursery()`, and `create_task()` becomes `start_soon()`. Note that the `start_soon()` argument list is just the name of the function ( `nap`) and its arguments rather than the parenthesized and more natural function call we see with `create_task()`.
 
@@ -101,6 +173,3 @@ One of the many complications with concurrency is that there tend to be multiple
 > Taskgroups are still a bolt-on to asyncio and there are several cases where they are ignored rather thoroughly. `create_server` is one example. Also, there's the arcane Protocol+Transport construct which Trio has replaced with a reasonable and much more accessible Stream concept, which asyncio also has acquired but seems to have no plans to migrate to.
 
 But my sense is that there will likely be more effort focused on Python’s built-in `asyncio` library. Not that Trio will go away—for example, the `attrs` library is still maintained despite the incorporation of `dataclasses` into standard Python. But for one thing, it’s a lot easier to argue the use of a standard library than an add-on. Thus, it seems like a good choice to use `asyncio` exception groups and task groups, at least until I discover that it doesn’t do something essential. If you know something about this, please mention it in the comments.
-
-Thanks for reading Programming, Together & Alone! Subscribe for free to receive new posts and support my work.
-

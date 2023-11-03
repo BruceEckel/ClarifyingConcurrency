@@ -1,4 +1,4 @@
-There are several ways that a task can be concluded:
+There are several ways a task can be concluded:
 
 1. Finish normally and produce a result (which can be None/Unit).
 
