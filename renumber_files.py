@@ -18,13 +18,11 @@ class Result:
 @dataclass(order=True)
 class NumberedFile:
     # Sorting is based on field order:
-    sort_index_1: int = field(init=False)
-    sort_index_2: str = field(init=False)
+    number: int = field(init=False)  # Sort on this first...
+    priority: str = field(init=False)  # ... then this
     original_name: str
     appendix: bool = False
     text_name: str = field(init=False)  # Without 'n. '
-    number: int = field(init=False)
-    priority: str = field(init=False)
     new_name: str = field(default="", init=False)
 
     def __post_init__(self):
@@ -35,9 +33,6 @@ class NumberedFile:
             self.text_name = match.group(3).strip()
         else:
             raise ValueError(f"Invalid format: {self.original_name}")
-
-        self.sort_index_1 = self.number
-        self.sort_index_2 = self.priority
 
     def __str__(self) -> str:
         br = "\n    "
