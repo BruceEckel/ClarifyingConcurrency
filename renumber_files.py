@@ -39,11 +39,11 @@ class NumberedFile:
         return (
             f"NumberedFile{br}"
             f"original_name: '{self.original_name}'{br}"
-            f"appendix: '{self.appendix}'{br}"
-            f"text_name: '{self.text_name}'{br}"
             f"number: {self.number}{br}"
+            f"text_name: '{self.text_name}'{br}"
+            f"new_name: '{self.new_name}'{br}"
             f"priority: '{self.priority}'{br}"
-            f"new_name: '{self.new_name}'"
+            f"appendix: '{self.appendix}'"
         )
 
     @classmethod
