@@ -2,6 +2,7 @@
 # Uses dataclass ordering to sort, respecting the '!' in the
 # filename to mean that file should appear first if there's a conflict.
 # So '3.! foo.md' will renumber before '3. bar.md'
+from collections import namedtuple
 import os
 import re
 from pathlib import Path
@@ -32,8 +33,16 @@ class NumberedFile:
         self.sort_index_1 = self.number
         self.sort_index_2 = self.priority
 
+    def __str__(self) -> str:
+        br = "\n    "
+        return (
+            f"NumberedFile{br}original_name: '{self.original_name}'{br}"
+            f"text_name: '{self.text_name}'{br}number: {self.number}{br}"
+            f"priority: '{self.priority}'{br}new_name: '{self.new_name}'"
+        )
+
     @classmethod
-    def sorted_list(cls, path: Union[str, Path] = ".") -> List["NumberedFile"]:
+    def list(cls, path: Union[str, Path] = ".") -> List["NumberedFile"]:
         numbered_files = sorted(
             [
                 cls(file.name)
@@ -43,10 +52,11 @@ class NumberedFile:
         )
         for i, nf in enumerate(numbered_files):
             nf.new_name = f"{i}. {nf.text_name}"
-        return numbered_files
+        to_change = [nf for nf in numbered_files if nf.original_name != nf.new_name]
+        Result = namedtuple("Result", "to_change numbered_files")
+        return Result(to_change, numbered_files)
 
 
-for nf in NumberedFile.sorted_list():
-    if nf.original_name != nf.new_name:
-        print(f"rename '{nf.original_name}' to '{nf.new_name}'")
-        # os.rename(nf.original_name, nf.new_name)
+for nf in NumberedFile.list().to_change:
+    print(f"'{nf.original_name}'  -->  '{nf.new_name}'")
+    # os.rename(nf.original_name, nf.new_name)
