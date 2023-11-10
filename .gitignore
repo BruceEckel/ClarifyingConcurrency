@@ -1,3 +1,4 @@
 
 *.json
 .obsidian/plugins/obsidian-smart-typography/main.js
+*.pyc

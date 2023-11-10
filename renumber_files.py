@@ -2,12 +2,17 @@
 # Uses dataclass ordering to sort, respecting the '!' in the
 # filename to mean that file should appear first if there's a conflict.
 # So '3.! foo.md' will renumber before '3. bar.md'
-from collections import namedtuple
 import os
 import re
 from pathlib import Path
 from dataclasses import dataclass, field
 from typing import Union, List
+
+
+@dataclass(frozen=True)
+class Result:
+    files: List["NumberedFile"] = field(default_factory=list)
+    changes: List["NumberedFile"] = field(default_factory=list)
 
 
 @dataclass(order=True)
@@ -16,6 +21,7 @@ class NumberedFile:
     sort_index_1: int = field(init=False)
     sort_index_2: str = field(init=False)
     original_name: str
+    appendix: bool = False
     text_name: str = field(init=False)  # Without 'n. '
     number: int = field(init=False)
     priority: str = field(init=False)
@@ -38,6 +44,7 @@ class NumberedFile:
         return (
             f"NumberedFile{br}"
             f"original_name: '{self.original_name}'{br}"
+            f"appendix: '{self.appendix}'{br}"
             f"text_name: '{self.text_name}'{br}"
             f"number: {self.number}{br}"
             f"priority: '{self.priority}'{br}"
@@ -45,22 +52,41 @@ class NumberedFile:
         )
 
     @classmethod
-    def list(cls, path: Union[str, Path] = ".") -> List["NumberedFile"]:
-        numbered_files = sorted(
+    def chapters(cls, path: Union[str, Path] = ".") -> Result:
+        chapter_list = sorted(
             [
                 cls(file.name)
                 for file in Path(path).glob("*.md")
                 if file.stem[:1].isdigit()
             ]
         )
-        for i, nf in enumerate(numbered_files):
+        for i, nf in enumerate(chapter_list):
             nf.new_name = f"{i}. {nf.text_name}"
-        to_change = [nf for nf in numbered_files if nf.original_name != nf.new_name]
-        Result = namedtuple("Result", "to_change numbered_files")
-        return Result(to_change, numbered_files)
+        changes = [nf for nf in chapter_list if nf.original_name != nf.new_name]
+        return Result(chapter_list, changes)
+
+    @classmethod
+    def appendices(cls, path: Union[str, Path] = ".") -> Result:
+        appendix_list = sorted(
+            [
+                cls(file.name[1:], appendix=True)
+                for file in Path(path).glob("A*.md")
+                if file.stem[1:2].isdigit()
+            ]
+        )
+        for i, nf in enumerate(appendix_list):
+            nf.original_name = "A" + nf.original_name
+            nf.new_name = f"A{i + 1}. {nf.text_name}"  # Start at A1 not A0
+        changes = [nf for nf in appendix_list if nf.original_name != nf.new_name]
+        return Result(appendix_list, changes)
 
 
-for nf in NumberedFile.list().numbered_files:
-    print(nf)
-    # print(f"'{nf.original_name}'  -->  '{nf.new_name}'")
-    # os.rename(nf.original_name, nf.new_name)
+if __name__ == "__main__":
+    for chapter in NumberedFile.chapters().files:
+        print(chapter)
+        # print(f"'{chapter.original_name}'  -->  '{chapter.new_name}'")
+        # os.rename(chapter.original_name, chapter.new_name)
+    for appendix in NumberedFile.appendices().files:
+        print(appendix)
+        # print(f"'{appendix.original_name}'  -->  '{appendix.new_name}'")
+        # os.rename(appendix.original_name, appendix.new_name)
