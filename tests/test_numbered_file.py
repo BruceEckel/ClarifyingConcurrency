@@ -41,15 +41,19 @@ def test_chapters_method(tmp_path: Path):
     assert isinstance(result, Result)
     assert len(result.files) == 3
     assert result.files[0].new_name == "0. test.md"
+    assert result.files[1].new_name == "1. important.md"
+    assert result.files[2].new_name == "2. another.md"
 
 
 # Test Appendices Class Method
 def test_appendices_method(tmp_path: Path):
-    (tmp_path / "A1. appendix1.md").touch()
-    (tmp_path / "A2. appendix2.md").touch()
-    (tmp_path / "A3. appendix3.md").touch()
+    (tmp_path / "A0. appendix1.md").touch()
+    (tmp_path / "A3. appendix2.md").touch()
+    (tmp_path / "A5. appendix3.md").touch()
 
     result = NumberedFile.appendices(path=tmp_path)
     assert isinstance(result, Result)
     assert len(result.files) == 3
     assert result.files[0].new_name == "A1. appendix1.md"
+    assert result.files[1].new_name == "A2. appendix2.md"
+    assert result.files[2].new_name == "A3. appendix3.md"
