@@ -36,9 +36,12 @@ class NumberedFile:
     def __str__(self) -> str:
         br = "\n    "
         return (
-            f"NumberedFile{br}original_name: '{self.original_name}'{br}"
-            f"text_name: '{self.text_name}'{br}number: {self.number}{br}"
-            f"priority: '{self.priority}'{br}new_name: '{self.new_name}'"
+            f"NumberedFile{br}"
+            f"original_name: '{self.original_name}'{br}"
+            f"text_name: '{self.text_name}'{br}"
+            f"number: {self.number}{br}"
+            f"priority: '{self.priority}'{br}"
+            f"new_name: '{self.new_name}'"
         )
 
     @classmethod
@@ -57,6 +60,7 @@ class NumberedFile:
         return Result(to_change, numbered_files)
 
 
-for nf in NumberedFile.list().to_change:
-    print(f"'{nf.original_name}'  -->  '{nf.new_name}'")
+for nf in NumberedFile.list().numbered_files:
+    print(nf)
+    # print(f"'{nf.original_name}'  -->  '{nf.new_name}'")
     # os.rename(nf.original_name, nf.new_name)
