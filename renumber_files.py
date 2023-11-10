@@ -28,7 +28,7 @@ class NumberedFile:
             self.priority = "A" if match.group(2) else "B"
             self.text_name = match.group(3).strip()
         else:
-            raise ValueError(f"Invalid format for original_name: {self.original_name}")
+            raise ValueError(f"Invalid format: {self.original_name}")
 
         self.sort_index_1 = self.number
         self.sort_index_2 = self.priority
