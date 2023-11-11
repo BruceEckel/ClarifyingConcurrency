@@ -1,45 +1,128 @@
-# refresh_code.py
+from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Tuple
+import textwrap
+from typing import List, Union
 import re
 
 
-def code_url_tags(file_path: Path) -> List[str]:
-    pattern = r"%%\s*code:\s*(https://github\.com/BruceEckel/python-experiments/tree/main/.+)\s*%%"
-    return re.findall(pattern, file_path.read_text(encoding="utf-8"))
+def separator(id: str) -> str:
+    return f" {id} ".center(60, "-") + "\n"
 
 
-def local_code(urls: List[str], base_path: str) -> List[Path]:
-    return [
-        Path(
-            url.replace(
-                "https://github.com/BruceEckel/python-experiments/tree/main", base_path
-            )
-        )
-        for url in urls
-    ]
+@dataclass
+class MarkdownText:
+    """
+    Contains a section of normal markdown text
+    """
+
+    text: str
+
+    def __repr__(self) -> str:
+        return f"{self.text!r}"
+
+    def __str__(self) -> str:
+        return separator("MarkdownText") + textwrap.fill(self.text, width=80)
 
 
-def python_code(file_path: Path, base_path: str) -> List[Tuple[str, Path]]:
-    blocks = re.findall(
-        r"```python\s*# (.*\.py)\s", file_path.read_text(encoding="utf-8")
-    )
-    return [(block, Path(base_path) / block) for block in blocks]
+@dataclass
+class SourceCodeListing:
+    """
+    Contains a single source-code listing:
+    A.  All listings begin and end with ``` markers.
+    B.  Programming-language listings use ``` followed
+        directly by the name of the language
+    C.  If there is no language name, then the listing
+        represents output from a program.
+    """
+
+    language: str
+    code: str
+
+    def __repr__(self) -> str:
+        lang_line = f"```{self.language}\n" if self.language else "```\n"
+        return lang_line + self.code + "\n```"
+
+    def __str__(self) -> str:
+        lang_line = f"```{self.language}\n" if self.language else "```\n"
+        return separator("SourceCodeListing") + lang_line + self.code + "\n```"
 
 
-def verify_files_exist(file_paths: List[Path]) -> List[bool]:
-    return [file_path.exists() for file_path in file_paths]
+@dataclass
+class GitHubURL:
+    """
+    Contains a URL to a github repo, which is represented in
+    the markdown file as:
+    %%
+    code: URL
+    %%
+    Each one of these sets the URL for subsequent code listings.
+    """
+
+    url: str
+
+    def __repr__(self) -> str:
+        return f"%%\ncode: {self.url}\n%%"
+
+    def __str__(self) -> str:
+        return separator("GitHubURL") + repr(self)
 
 
-if __name__ == "__main__":
-    base_path = "C:/git/python-experiments"
+def parse_markdown(
+    mdfile: Path,
+) -> List[Union[MarkdownText, SourceCodeListing, GitHubURL]]:
+    content = mdfile.read_text(encoding="utf-8")
+    sections = []
+    current_text = ""
+    in_code_block = False
+    in_github_url = False
+    language = None
 
-    for file_path in Path(__file__).parent.glob("*.md"):
-        urls = code_url_tags(file_path)
-        local_paths = local_code(urls, base_path)
-
-        for name, path in python_code(file_path, base_path):
-            if path.exists():
-                print(f"Verified: {path}")
+    for line in content.splitlines(True):  # Keep line endings
+        if line.startswith("```"):
+            if in_code_block:
+                # Add source code listing and reset
+                sections.append(SourceCodeListing(language, current_text))
+                current_text = ""
+                in_code_block = False
+                language = None
             else:
-                print(f"Missing: {path}")
+                if current_text:
+                    # Add markdown text and reset
+                    sections.append(MarkdownText(current_text.rstrip("\n")))
+                    current_text = ""
+                in_code_block = True
+                language = line.strip("```").strip() or None
+        elif line.startswith("%%"):
+            if in_github_url:
+                # Add GitHub URL and reset
+                sections.append(GitHubURL(current_text.strip()))
+                current_text = ""
+                in_github_url = False
+            else:
+                if current_text:
+                    # Add markdown text and reset
+                    sections.append(MarkdownText(current_text.rstrip("\n")))
+                    current_text = ""
+                in_github_url = True
+        elif in_github_url:
+            url_match = re.search(r"code:\s*(.*)", line)
+            if url_match:
+                current_text = url_match.group(1).strip()
+        else:
+            current_text += line
+
+    if current_text:
+        # Add the last section (either URL or Markdown text)
+        if in_github_url:
+            sections.append(GitHubURL(current_text.strip()))
+        else:
+            sections.append(MarkdownText(current_text.rstrip("\n")))
+
+    return sections
+
+
+# Example usage
+markdown_file = Path("8. Python Threads vs OS Threads.md")
+parsed_sections = parse_markdown(markdown_file)
+for section in parsed_sections:
+    print(section)
