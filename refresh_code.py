@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from pathlib import Path
 import textwrap
-from typing import List, Union
+from typing import List
 import re
 
 
@@ -35,7 +35,7 @@ class SourceCodeListing:
         represents output from a program.
     """
 
-    language: str
+    language: str | None
     code: str
 
     def __repr__(self) -> str:
@@ -71,8 +71,8 @@ def parse_markdown(
     mdfile: Path,
 ) -> List[MarkdownText | SourceCodeListing | GitHubURL]:
     content = mdfile.read_text(encoding="utf-8")
-    sections = []
-    current_text = []
+    sections: list[MarkdownText | SourceCodeListing | GitHubURL] = []
+    current_text: List[str] = []
     in_code_block = False
     in_github_url = False
     language = None
