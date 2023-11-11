@@ -69,10 +69,10 @@ class GitHubURL:
 
 def parse_markdown(
     mdfile: Path,
-) -> List[Union[MarkdownText, SourceCodeListing, GitHubURL]]:
+) -> List[MarkdownText | SourceCodeListing | GitHubURL]:
     content = mdfile.read_text(encoding="utf-8")
     sections = []
-    current_text = ""
+    current_text = []
     in_code_block = False
     in_github_url = False
     language = None
@@ -80,43 +80,38 @@ def parse_markdown(
     for line in content.splitlines(True):  # Keep line endings
         if line.startswith("```"):
             if in_code_block:
-                # Add source code listing and reset
-                sections.append(SourceCodeListing(language, current_text))
-                current_text = ""
+                sections.append(SourceCodeListing(language, "".join(current_text)))
+                current_text = []
                 in_code_block = False
                 language = None
             else:
                 if current_text:
-                    # Add markdown text and reset
-                    sections.append(MarkdownText(current_text.rstrip("\n")))
-                    current_text = ""
+                    sections.append(MarkdownText("".join(current_text)))
+                    current_text = []
                 in_code_block = True
                 language = line.strip("```").strip() or None
         elif line.startswith("%%"):
             if in_github_url:
-                # Add GitHub URL and reset
-                sections.append(GitHubURL(current_text.strip()))
-                current_text = ""
+                sections.append(GitHubURL("".join(current_text).strip()))
+                current_text = []
                 in_github_url = False
             else:
                 if current_text:
-                    # Add markdown text and reset
-                    sections.append(MarkdownText(current_text.rstrip("\n")))
-                    current_text = ""
+                    sections.append(MarkdownText("".join(current_text)))
+                    current_text = []
                 in_github_url = True
         elif in_github_url:
             url_match = re.search(r"code:\s*(.*)", line)
             if url_match:
-                current_text = url_match.group(1).strip()
+                current_text.append(url_match.group(1).strip())
         else:
-            current_text += line
+            current_text.append(line)
 
     if current_text:
-        # Add the last section (either URL or Markdown text)
         if in_github_url:
-            sections.append(GitHubURL(current_text.strip()))
+            sections.append(GitHubURL("".join(current_text).strip()))
         else:
-            sections.append(MarkdownText(current_text.rstrip("\n")))
+            sections.append(MarkdownText("".join(current_text)))
 
     return sections
 
@@ -126,3 +121,4 @@ markdown_file = Path("8. Python Threads vs OS Threads.md")
 parsed_sections = parse_markdown(markdown_file)
 for section in parsed_sections:
     print(section)
+    print(repr(section))
