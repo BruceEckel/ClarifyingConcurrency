@@ -1,12 +1,11 @@
+# parse_markdown.py
 from dataclasses import dataclass
-from io import StringIO
-from pathlib import Path
 from typing import List
 import re
 
 
-def separator(id: str) -> str:
-    return f" {id} ".center(60, "-") + "\n"
+def separator(id: str, sep_char: str = "-") -> str:
+    return f" {id} ".center(60, sep_char) + "\n"
 
 
 @dataclass
@@ -114,23 +113,3 @@ def parse_markdown(
             sections.append(MarkdownText("".join(current_text)))
 
     return sections
-
-
-def test(filename: str):
-    content = Path(filename).read_text(encoding="utf-8")
-    parsed_sections = parse_markdown(content)
-
-    new_markdown = StringIO()
-    new_markdown.write("".join([repr(section) for section in parsed_sections]))
-    new_markdown.seek(0)
-    if new_markdown.read() == content:
-        return "OK"
-    else:
-        Path(filename + ".tmp").write_text(
-            "".join([repr(section) for section in parsed_sections])
-        )
-        return "Not the same"
-
-
-for md in Path(".").glob("*.md"):
-    print(f"{md.name}: [{test(md.name)}]")
