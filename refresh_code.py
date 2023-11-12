@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from io import StringIO
 from pathlib import Path
 from typing import List
 import re
@@ -115,13 +116,19 @@ def parse_markdown(
     return sections
 
 
-# Example usage
-markdown_file = Path("7. Cancellation.md")
-tmp = Path("tmp.md")
-content = markdown_file.read_text(encoding="utf-8")
-parsed_sections = parse_markdown(content)
-new_markdown = "".join([repr(section) for section in parsed_sections])
-tmp.write_text(new_markdown, encoding="utf-8")
-assert tmp.read_text(encoding="utf-8") == Path("7. Cancellation.md").read_text(
-    encoding="utf-8"
-)
+def test(filename: str):
+    markdown_file = Path(filename)
+    content = markdown_file.read_text(encoding="utf-8")
+    parsed_sections = parse_markdown(content)
+
+    new_markdown = StringIO()
+    new_markdown.write("".join([repr(section) for section in parsed_sections]))
+    new_markdown.seek(0)
+    if new_markdown.read() == content:
+        return "OK"
+    else:
+        return "Not the same"
+
+
+for md in Path(".").glob("*.md"):
+    print(f"{md.name}: [{test(md.name)}]")
