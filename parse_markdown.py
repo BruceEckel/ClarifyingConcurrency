@@ -30,8 +30,11 @@ class SourceCodeListing:
     A.  All listings begin and end with ``` markers.
     B.  Programming-language listings use ``` followed
         directly by the name of the language
-    C.  If there is no language name, then the listing
-        represents output from a program.
+    C.  If it is program output, the name of the language is `text`.
+    D.  Providing no language name is not allowed.
+    E.  TODO: A `!` after the language name tells the program
+        to allow no slug-line, for code fragments that don't have
+        an associated file.
     """
 
     language: str | None
