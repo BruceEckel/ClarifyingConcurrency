@@ -62,7 +62,7 @@ class GitHubURL:
     url: str
 
     def __repr__(self) -> str:
-        return f"%%\ncode: {self.url}\n%%"
+        return f"%%\ncode: {self.url}\n%%\n"
 
     def __str__(self) -> str:
         return separator("GitHubURL") + repr(self)
@@ -117,8 +117,7 @@ def parse_markdown(
 
 
 def test(filename: str):
-    markdown_file = Path(filename)
-    content = markdown_file.read_text(encoding="utf-8")
+    content = Path(filename).read_text(encoding="utf-8")
     parsed_sections = parse_markdown(content)
 
     new_markdown = StringIO()
@@ -127,6 +126,9 @@ def test(filename: str):
     if new_markdown.read() == content:
         return "OK"
     else:
+        Path(filename + ".tmp").write_text(
+            "".join([repr(section) for section in parsed_sections])
+        )
         return "Not the same"
 
 
