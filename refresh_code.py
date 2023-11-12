@@ -17,7 +17,7 @@ class MarkdownText:
     text: str
 
     def __repr__(self) -> str:
-        return f"{self.text.rstrip()}\n"
+        return f"{self.text}"
 
     def __str__(self) -> str:
         return separator("MarkdownText") + repr(self)
@@ -39,7 +39,7 @@ class SourceCodeListing:
 
     def __repr__(self) -> str:
         lang_line = f"```{self.language}\n" if self.language else "```\n"
-        return lang_line + self.code + "```"
+        return lang_line + self.code + "```\n"
 
     def __str__(self) -> str:
         # lang_line = f"```{self.language}\n" if self.language else "```\n"
@@ -117,7 +117,11 @@ def parse_markdown(
 
 # Example usage
 markdown_file = Path("7. Cancellation.md")
+tmp = Path("tmp.md")
 content = markdown_file.read_text(encoding="utf-8")
 parsed_sections = parse_markdown(content)
-for section in parsed_sections:
-    print(repr(section))
+new_markdown = "".join([repr(section) for section in parsed_sections])
+tmp.write_text(new_markdown, encoding="utf-8")
+assert tmp.read_text(encoding="utf-8") == Path("7. Cancellation.md").read_text(
+    encoding="utf-8"
+)
