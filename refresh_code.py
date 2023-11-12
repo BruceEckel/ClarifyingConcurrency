@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from pathlib import Path
-import textwrap
 from typing import List
 import re
 
@@ -18,10 +17,10 @@ class MarkdownText:
     text: str
 
     def __repr__(self) -> str:
-        return f"{self.text!r}"
+        return f"{self.text.rstrip()}\n"
 
     def __str__(self) -> str:
-        return separator("MarkdownText") + textwrap.fill(self.text, width=80)
+        return separator("MarkdownText") + repr(self)
 
 
 @dataclass
@@ -40,11 +39,12 @@ class SourceCodeListing:
 
     def __repr__(self) -> str:
         lang_line = f"```{self.language}\n" if self.language else "```\n"
-        return lang_line + self.code + "\n```"
+        return lang_line + self.code + "```"
 
     def __str__(self) -> str:
-        lang_line = f"```{self.language}\n" if self.language else "```\n"
-        return separator("SourceCodeListing") + lang_line + self.code + "\n```"
+        # lang_line = f"```{self.language}\n" if self.language else "```\n"
+        # return separator("SourceCodeListing") + lang_line + self.code + "\n```"
+        return separator("SourceCodeListing") + repr(self)
 
 
 @dataclass
@@ -68,9 +68,8 @@ class GitHubURL:
 
 
 def parse_markdown(
-    mdfile: Path,
+    content: str,
 ) -> List[MarkdownText | SourceCodeListing | GitHubURL]:
-    content = mdfile.read_text(encoding="utf-8")
     sections: list[MarkdownText | SourceCodeListing | GitHubURL] = []
     current_text: List[str] = []
     in_code_block = False
@@ -117,8 +116,8 @@ def parse_markdown(
 
 
 # Example usage
-markdown_file = Path("8. Python Threads vs OS Threads.md")
-parsed_sections = parse_markdown(markdown_file)
+markdown_file = Path("7. Cancellation.md")
+content = markdown_file.read_text(encoding="utf-8")
+parsed_sections = parse_markdown(content)
 for section in parsed_sections:
-    print(section)
     print(repr(section))
