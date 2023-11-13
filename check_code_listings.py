@@ -1,6 +1,6 @@
 # check_code_listings.py
 from pathlib import Path
-from parse_markdown import SourceCodeListing, parse_markdown, separator
+from markdown_file import MarkdownFile, SourceCodeListing, separator
 
 
 def check_code_block(scl: SourceCodeListing) -> str | None:
@@ -24,16 +24,15 @@ def check_code_block(scl: SourceCodeListing) -> str | None:
             return err_msg
 
 
-def check_code_listings(filename: str):
-    content = Path(filename).read_text(encoding="utf-8")
-    for section in parse_markdown(content):
+def check_code_listings(md: Path):
+    markdown = MarkdownFile(md)
+    for section in markdown:
         if isinstance(section, SourceCodeListing):
             r = check_code_block(section)
             if r:
-                # print(separator(filename, "#"), r)
                 print(r)
 
 
 for md in Path(".").glob("*.md"):
     print(separator(md, "+"))
-    check_code_listings(md.name)
+    check_code_listings(md)
