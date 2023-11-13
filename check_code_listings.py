@@ -4,7 +4,7 @@ from parse_markdown import SourceCodeListing, parse_markdown, separator
 
 
 def check_code_block(scl: SourceCodeListing) -> str | None:
-    first_line = scl.code.splitlines()[0]
+    first_line = scl.code[0]
     err_msg = f"{scl.language} ----> {first_line}"
 
     match scl.language:
@@ -34,4 +34,5 @@ def check_code_listings(filename: str):
 
 
 for md in Path(".").glob("*.md"):
+    print(separator(md, "+"))
     check_code_listings(md.name)

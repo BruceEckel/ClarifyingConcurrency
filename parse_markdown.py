@@ -2,6 +2,7 @@
 from dataclasses import dataclass
 from typing import List
 import re
+from pprint import pprint
 
 
 def separator(id: str, sep_char: str = "-") -> str:
@@ -29,7 +30,7 @@ class SourceCodeListing:
     Contains a single source-code listing:
     A.  All listings begin and end with ``` markers.
     B.  Programming-language listings use ``` followed
-        directly by the name of the language
+        immediately by the name of the language (no space!)
     C.  If it is program output, the name of the language is `text`.
     D.  Providing no language name is not allowed.
     E.  TODO: A `!` after the language name tells the program
@@ -37,17 +38,29 @@ class SourceCodeListing:
         an associated file.
     """
 
-    language: str | None
-    code: str
+    code_block: str
+    language: str = ""
+    code: str = ""
+    ignore: bool = False
+
+    def __post_init__(self):
+        lines = self.code_block.splitlines(True)
+        tagline = lines[0].strip()
+        if tagline.endswith("!"):
+            tagline = tagline[:-1]
+            self.ignore = True
+        self.language = tagline[3:].strip()
+        self.code = lines[1:-1]
 
     def __repr__(self) -> str:
-        lang_line = f"```{self.language}\n" if self.language else "```\n"
-        return lang_line + self.code + "```\n"
+        return self.code_block
 
     def __str__(self) -> str:
-        # lang_line = f"```{self.language}\n" if self.language else "```\n"
-        # return separator("SourceCodeListing") + lang_line + self.code + "\n```"
-        return separator("SourceCodeListing") + repr(self)
+        return (
+            separator("SourceCodeListing")
+            + repr(self)
+            + f"{self.language = } {self.ignore = }"
+        )
 
 
 @dataclass
@@ -77,21 +90,20 @@ def parse_markdown(
     current_text: List[str] = []
     in_code_block = False
     in_github_url = False
-    language = None
 
     for line in content.splitlines(True):  # Keep line endings
         if line.startswith("```"):
             if in_code_block:
-                sections.append(SourceCodeListing(language, "".join(current_text)))
+                current_text.append(line)
+                sections.append(SourceCodeListing("".join(current_text)))
                 current_text = []
                 in_code_block = False
-                language = None
             else:
                 if current_text:
                     sections.append(MarkdownText("".join(current_text)))
                     current_text = []
                 in_code_block = True
-                language = line.strip("```").strip() or None
+                current_text.append(line)
         elif line.startswith("%%"):
             if in_github_url:
                 sections.append(GitHubURL("".join(current_text).strip()))
