@@ -2,7 +2,6 @@
 from dataclasses import dataclass
 from typing import List
 import re
-from pprint import pprint
 
 
 def separator(id: str, sep_char: str = "-") -> str:
@@ -86,7 +85,7 @@ class GitHubURL:
 def parse_markdown(
     content: str,
 ) -> List[MarkdownText | SourceCodeListing | GitHubURL]:
-    sections: list[MarkdownText | SourceCodeListing | GitHubURL] = []
+    sections: List[MarkdownText | SourceCodeListing | GitHubURL] = []
     current_text: List[str] = []
     in_code_block = False
     in_github_url = False

@@ -30,7 +30,8 @@ def check_code_listings(filename: str):
         if isinstance(section, SourceCodeListing):
             r = check_code_block(section)
             if r:
-                print(separator(filename, "#"), r)
+                # print(separator(filename, "#"), r)
+                print(r)
 
 
 for md in Path(".").glob("*.md"):
