@@ -17,6 +17,7 @@ def check_code_listings(md: Path):
             print(r)
 
 
-for md in Path(".").glob("*.md"):
-    print(separator(md, "+"), end="")
-    check_code_listings(md)
+if __name__ == "__main__":
+    for md in Path(".").glob("*.md"):
+        print(separator(md, "+"), end="")
+        check_code_listings(md)

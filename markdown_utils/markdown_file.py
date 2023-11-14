@@ -1,4 +1,4 @@
-# parse_markdown.py
+# markdown_file.py
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, List
