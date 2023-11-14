@@ -1,3 +1,6 @@
+"""
+Tests and maintains Markdown files containing embedded code listings.
+"""
 import typer
 from markdown_utils import (
     separator,
@@ -12,6 +15,9 @@ app = typer.Typer()
 
 @app.command()
 def check():
+    """
+    Validates Markdown files.
+    """
     for tmp_file in Path(".").glob("*.tmp"):
         tmp_file.unlink()
     for md in Path(".").glob("*.md"):
@@ -20,6 +26,9 @@ def check():
 
 @app.command()
 def listings():
+    """
+    Validates code listings within Markdown files.
+    """
     for md in Path(".").glob("*.md"):
         print(separator(md, "+"), end="")
         check_code_listings(md)
@@ -27,6 +36,11 @@ def listings():
 
 @app.command()
 def renumber():
+    """
+    Reorders numbered Markdown files. To insert a file 'n',
+    name it 'n.! Chapter Title'. The '!' gives that chapter
+    priority over another chapter with the same number.
+    """
     chapter_changes = NumberedFile.chapters().changes
     appendix_changes = NumberedFile.appendices().changes
     if not chapter_changes and not appendix_changes:
