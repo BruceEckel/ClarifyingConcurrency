@@ -1,4 +1,4 @@
-# go.ps1
+# tools.ps1
 
 param(
     [string]$arg
