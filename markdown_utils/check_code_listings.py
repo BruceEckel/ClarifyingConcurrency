@@ -1,6 +1,6 @@
 # check_code_listings.py
 from pathlib import Path
-from markdown_file import MarkdownFile, SourceCodeListing, separator
+from .markdown_file import MarkdownFile, SourceCodeListing, separator
 
 
 def check_code_block(scl: SourceCodeListing) -> str | None:

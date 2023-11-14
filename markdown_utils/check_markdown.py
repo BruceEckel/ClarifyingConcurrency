@@ -1,7 +1,7 @@
 # check_markdown.py
 from io import StringIO
 from pathlib import Path
-from markdown_file import MarkdownFile
+from .markdown_file import MarkdownFile
 
 
 def check_markdown(md: Path):
