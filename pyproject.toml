@@ -25,5 +25,8 @@ dev-dependencies = [
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.black]
+line-length = 70
+
 [project.scripts]
 tools = "markdown_utils.tools:main"
