@@ -1,5 +1,5 @@
 # parse_markdown.py
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterator, List
 import re
@@ -159,11 +159,8 @@ class MarkdownFile:
     def __iter__(self) -> Iterator[MarkdownText | SourceCodeListing | GitHubURL]:
         return iter(self.contents)
 
+    def code_listings(self) -> Iterator[SourceCodeListing]:
+        return [part for part in self if isinstance(part, SourceCodeListing)]
 
-# Usage example
-# markdown_file = MarkdownFile(Path("path/to/markdown/file.md"))
-# for section in markdown_file:
-#     if isinstance(section, SourceCodeListing):
-#         r = check_code_block(section)
-#         if r:
-#             print(r)
+    def github_urls(self) -> Iterator[SourceCodeListing]:
+        return [part for part in self if isinstance(part, GitHubURL)]
