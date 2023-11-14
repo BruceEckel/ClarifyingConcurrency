@@ -159,8 +159,8 @@ class MarkdownFile:
     def __iter__(self) -> Iterator[MarkdownText | SourceCodeListing | GitHubURL]:
         return iter(self.contents)
 
-    def code_listings(self) -> Iterator[SourceCodeListing]:
+    def code_listings(self) -> List[SourceCodeListing]:
         return [part for part in self if isinstance(part, SourceCodeListing)]
 
-    def github_urls(self) -> Iterator[SourceCodeListing]:
+    def github_urls(self) -> List[GitHubURL]:
         return [part for part in self if isinstance(part, GitHubURL)]
