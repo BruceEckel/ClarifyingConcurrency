@@ -5,7 +5,7 @@ from markdown_file import MarkdownFile, SourceCodeListing, separator
 
 def check_code_block(scl: SourceCodeListing) -> str | None:
     first_line = scl.code[0]
-    err_msg = f"{scl.language} ----> {first_line}"
+    err_msg = f"{scl.language}: {scl.source_file_name}"
 
     match scl.language:
         case None:

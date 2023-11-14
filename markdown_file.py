@@ -33,33 +33,57 @@ class SourceCodeListing:
         immediately by the name of the language (no space!)
     C.  If it is program output, the name of the language is `text`.
     D.  Providing no language name is not allowed.
-    E.  TODO: A `!` after the language name tells the program
+    E.  A `!` after the language name tells the program
         to allow no slug-line, for code fragments that don't have
         an associated file.
     """
 
-    code_block: str
+    original_code_block: str
     language: str = ""
+    source_file_name: str = ""
     code: str = ""
     ignore: bool = False
 
     def __post_init__(self):
-        lines = self.code_block.splitlines(True)
+        lines = self.original_code_block.splitlines(True)
         tagline = lines[0].strip()
-        if tagline.endswith("!"):
-            tagline = tagline[:-1]
-            self.ignore = True
+        filename_line = lines[1].strip() if len(lines) > 1 else ""
+
+        self.ignore = tagline.endswith("!")
+        tagline = tagline.rstrip("!")
         self.language = tagline[3:].strip()
-        self.code = lines[1:-1]
-        assert self.language != "", f"Language cannot be empty in {self.code_block}"
+        self.code = "".join(lines[1:-1])
+
+        assert self.language, f"Language cannot be empty in {self.original_code_block}"
+
+        if self.ignore:
+            return
+
+        match self.language:
+            case "python":
+                self._validate_filename(filename_line, "#", ".py")
+            case "rust":
+                self._validate_filename(filename_line, "//", ".rs")
+            case "go":
+                self._validate_filename(filename_line, "//", ".go")
+
+    def _validate_filename(self, line: str, comment: str, file_ext: str):
+        assert line.startswith(comment) and line.endswith(
+            file_ext
+        ), f"First line must contain source file name in {self.original_code_block}"
+        self.source_file_name = line[len(comment) :].strip()
 
     def __repr__(self) -> str:
-        return f"```{self.language}\n" + "".join(self.code) + "```\n"
+        def ignore_marker():
+            return " !" if self.ignore else ""
+
+        return f"```{self.language}{ignore_marker()}\n" + "".join(self.code) + "```\n"
 
     def __str__(self) -> str:
         return (
             separator("SourceCodeListing")
             + repr(self)
+            + f"{self.source_file_name = }\n"
             + f"{self.language = } {self.ignore = }"
         )
 

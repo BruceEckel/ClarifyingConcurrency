@@ -1,6 +1,6 @@
 from io import StringIO
 from pathlib import Path
-from markdown_file import MarkdownFile, SourceCodeListing, separator
+from markdown_file import MarkdownFile
 
 
 def test(md: Path):
@@ -18,5 +18,8 @@ def test(md: Path):
         return "Not the same"
 
 
-for md in Path(".").glob("*.md"):
-    print(f"{md.name}: [{test(md)}]")
+if __name__ == "__main__":
+    for tmp_file in Path(".").glob("*.tmp"):
+        tmp_file.unlink()
+    for md in Path(".").glob("*.md"):
+        print(f"{md.name}: [{test(md)}]")
