@@ -1,7 +1,9 @@
 """
 Tests and maintains Markdown files containing embedded code listings.
 """
+from typing import Optional
 import typer
+from typing_extensions import Annotated
 from markdown_utils import (
     separator,
     check_code_listings,
@@ -25,13 +27,21 @@ def check():
 
 
 @app.command()
-def listings():
+def listings(
+    filename: Annotated[Optional[str], typer.Argument()] = None
+):
     """
     Validates code listings within Markdown files.
     """
-    for md in Path(".").glob("*.md"):
-        print(separator(md, "+"), end="")
+    print(filename)
+    if filename:
+        md = Path(filename)
+        assert md.exists(), f"{md} does not exist"
         check_code_listings(md)
+    else:
+        for md in Path(".").glob("*.md"):
+            print(separator(md, "+"), end="")
+            check_code_listings(md)
 
 
 @app.command()
