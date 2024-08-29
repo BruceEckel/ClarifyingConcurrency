@@ -1,7 +1,7 @@
 # Clarifying Concurrency
 
 Note that I have abandonded this project.
-To understand why, read `0. Why I Quit.md`.
+To understand why, read [Why I Quit](https://github.com/BruceEckel/ClarifyingConcurrency/blob/main/0.%20Why%20I%20Quit.md).
 
 Research writings as part of developing a book on the foundations of concurrency, for experienced programmers
 who either know nothing about concurrency or are confused by it.
